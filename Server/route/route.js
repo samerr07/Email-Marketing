@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../config/supabase_client');
-const { adminLogin, createUser } = require('../controller/admin');
+const { adminLogin, createUser, updateUser } = require('../controller/admin');
 const { userLogin, getUsers, deleteUser } = require('../controller/user');
 const { authenticate, authorizeAdmin } = require('../middleware/middleware')
 
@@ -32,6 +32,8 @@ router.post('/login', async(req, res) => {
 router.post("/create_user",  createUser)
 
 router.get('/users', getUsers);
+
+router.put('/update_user/:id', updateUser);
 
 router.delete('/users/:id', deleteUser);
 module.exports = router;

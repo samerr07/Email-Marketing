@@ -1,6 +1,7 @@
 const fs = require('fs');
 const xlsx = require('xlsx');
 const nodemailer = require('nodemailer');
+const path = require('path');
 
 // Read Excel file and return data
 function readExcelData(excelPath) {
@@ -42,6 +43,58 @@ function createTransporter({ smtpServer, smtpPort, emailUser, emailPass, delayBe
     });
 }
 
+// Extract CID references from HTML template
+function extractCIDReferences(htmlContent) {
+    const cidPattern = /src=["']cid:([^"']+)["']/gi;
+    const cids = [];
+    let match;
+    
+    while ((match = cidPattern.exec(htmlContent)) !== null) {
+        cids.push(match[1]); // Extract the CID name
+    }
+    
+    return [...new Set(cids)]; // Remove duplicates
+}
+
+// Build attachments array from CID references
+function buildAttachmentsFromCIDs(cids, uploadsPath = './uploads/images/') {
+    const attachments = [];
+    
+    cids.forEach(cid => {
+        // Try different common image extensions
+        const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        let foundFile = null;
+        
+        for (const ext of extensions) {
+            const possiblePath = path.join(uploadsPath, cid + ext);
+            if (fs.existsSync(possiblePath)) {
+                foundFile = possiblePath;
+                break;
+            }
+            
+            // Also try without extension (in case CID already includes it)
+            const directPath = path.join(uploadsPath, cid);
+            if (fs.existsSync(directPath)) {
+                foundFile = directPath;
+                break;
+            }
+        }
+        
+        if (foundFile) {
+            attachments.push({
+                filename: path.basename(foundFile),
+                path: foundFile,
+                cid: cid
+            });
+        } else {
+            console.warn(`Image not found for CID: ${cid}`);
+        }
+    });
+    
+    return attachments;
+}
+
+
 // Send emails with retry and personalization
 async function sendEmailsJob({
     jobId,
@@ -54,10 +107,15 @@ async function sendEmailsJob({
     variables,
     transporter,
     delayBetweenEmails,
-    activeSendingJobs
+    activeSendingJobs,
+    uploadsPath = './uploads/images/'
 }) {
     let success = 0;
     let failed = 0;
+
+    // Extract CID references from template once
+    const cidReferences = extractCIDReferences(templateContent);
+    const baseAttachments = buildAttachmentsFromCIDs(cidReferences, uploadsPath);
 
     for (let i = 0; i < recipients.length; i++) {
         const currentJobData = activeSendingJobs.get(jobId);
@@ -88,17 +146,41 @@ async function sendEmailsJob({
             const personalizedSubject = subjectLine.replace(/{{name}}/gi, name);
             personalized = personalized.replace(/{{name}}/gi, name);
 
+             // Prepare email options
+            const mailOptions = {
+                from: `"${senderName || 'Email Marketing Tool'}" <${transporter.options.auth.user}>`,
+                to: email,
+                subject: personalizedSubject,
+                html: personalized,
+                attachments: baseAttachments // Include CID attachments
+            };
+
             let retries = 2;
             let sent = false;
 
+
+
+            // while (retries >= 0 && !sent) {
+            //     try {
+            //         await transporter.sendMail({
+            //             from: `"${senderName || 'Email Marketing Tool'}" <${transporter.options.auth.user}>`,
+            //             to: email,
+            //             subject: personalizedSubject,
+            //             html: personalized,
+            //         });
+            //         sent = true;
+            //         success++;
+            //         const jobData = activeSendingJobs.get(jobId);
+            //         if (jobData) jobData.sentEmails = success;
+            //     } catch (err) {
+            //         retries--;
+            //         if (retries < 0) throw err;
+            //         await new Promise(r => setTimeout(r, 1000));
+            //     }
+            // }
             while (retries >= 0 && !sent) {
                 try {
-                    await transporter.sendMail({
-                        from: `"${senderName || 'Email Marketing Tool'}" <${transporter.options.auth.user}>`,
-                        to: email,
-                        subject: personalizedSubject,
-                        html: personalized,
-                    });
+                    await transporter.sendMail(mailOptions);
                     sent = true;
                     success++;
                     const jobData = activeSendingJobs.get(jobId);
@@ -133,5 +215,7 @@ module.exports = {
     getTemplateContent,
     filterValidRecipients,
     createTransporter,
-    sendEmailsJob
+    sendEmailsJob,
+     extractCIDReferences,
+    buildAttachmentsFromCIDs
 };

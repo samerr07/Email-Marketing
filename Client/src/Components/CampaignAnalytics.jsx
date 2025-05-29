@@ -4,103 +4,133 @@ import {
   Mail, Users, MousePointer, TrendingUp, Calendar,
   BarChart3, PieChart, Activity, Download
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
-const CampaignAnalytics = () => {
+const CampaignAnalytics = ({campaigns}) => {
   const [activeView, setActiveView] = useState('list'); // 'list' or 'analytics'
   const [selectedCampaign, setSelectedCampaign] = useState(null);
 
   // Sample campaigns data
-  const campaigns = [
-    {
-      id: 1,
-      name: "Summer Sale 2024",
-      status: "Active",
-      sent: 15420,
-      opened: 9252,
-      clicked: 1851,
-      date: "2024-05-20",
-      subject: "🌞 Summer Sale: Up to 50% Off Everything!",
-      bounced: 234,
-      unsubscribed: 45,
-      complaints: 2,
-      revenue: 45680,
-      topLinks: [
-        { url: "https://example.com/summer-sale", clicks: 892 },
-        { url: "https://example.com/products/swimwear", clicks: 445 },
-        { url: "https://example.com/products/sandals", clicks: 314 }
-      ],
-      deviceStats: {
-        desktop: 45,
-        mobile: 38,
-        tablet: 17
-      },
-      timeStats: [
-        { hour: '6AM', opens: 120 },
-        { hour: '9AM', opens: 450 },
-        { hour: '12PM', opens: 680 },
-        { hour: '3PM', opens: 520 },
-        { hour: '6PM', opens: 890 },
-        { hour: '9PM', opens: 340 }
-      ]
-    },
-    {
-      id: 2,
-      name: "Product Launch - New Collection",
-      status: "Completed",
-      sent: 8750,
-      opened: 4200,
-      clicked: 840,
-      date: "2024-05-15",
-      subject: "Introducing Our New Collection",
-      bounced: 87,
-      unsubscribed: 23,
-      complaints: 1,
-      revenue: 28450,
-      topLinks: [
-        { url: "https://example.com/new-collection", clicks: 523 },
-        { url: "https://example.com/lookbook", clicks: 201 },
-        { url: "https://example.com/about", clicks: 116 }
-      ],
-      deviceStats: {
-        desktop: 52,
-        mobile: 35,
-        tablet: 13
-      },
-      timeStats: [
-        { hour: '6AM', opens: 80 },
-        { hour: '9AM', opens: 320 },
-        { hour: '12PM', opens: 420 },
-        { hour: '3PM', opens: 380 },
-        { hour: '6PM', opens: 650 },
-        { hour: '9PM', opens: 280 }
-      ]
-    },
-    {
-      id: 3,
-      name: "Weekly Newsletter #24",
-      status: "Draft",
-      sent: 0,
-      opened: 0,
-      clicked: 0,
-      date: "2024-05-24",
-      subject: "This Week's Top Stories",
-      bounced: 0,
-      unsubscribed: 0,
-      complaints: 0,
-      revenue: 0,
-      topLinks: [],
-      deviceStats: {
-        desktop: 0,
-        mobile: 0,
-        tablet: 0
-      },
-      timeStats: []
-    }
-  ];
+  // const campaigns = [
+  //   {
+  //     id: 1,
+  //     name: "Summer Sale 2024",
+  //     status: "Active",
+  //     sent: 15420,
+  //     opened: 9252,
+  //     clicked: 1851,
+  //     date: "2024-05-20",
+  //     subject: "🌞 Summer Sale: Up to 50% Off Everything!",
+  //     bounced: 234,
+  //     unsubscribed: 45,
+  //     complaints: 2,
+  //     revenue: 45680,
+  //     topLinks: [
+  //       { url: "https://example.com/summer-sale", clicks: 892 },
+  //       { url: "https://example.com/products/swimwear", clicks: 445 },
+  //       { url: "https://example.com/products/sandals", clicks: 314 }
+  //     ],
+  //     deviceStats: {
+  //       desktop: 45,
+  //       mobile: 38,
+  //       tablet: 17
+  //     },
+  //     timeStats: [
+  //       { hour: '6AM', opens: 120 },
+  //       { hour: '9AM', opens: 450 },
+  //       { hour: '12PM', opens: 680 },
+  //       { hour: '3PM', opens: 520 },
+  //       { hour: '6PM', opens: 890 },
+  //       { hour: '9PM', opens: 340 }
+  //     ]
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Product Launch - New Collection",
+  //     status: "Completed",
+  //     sent: 8750,
+  //     opened: 4200,
+  //     clicked: 840,
+  //     date: "2024-05-15",
+  //     subject: "Introducing Our New Collection",
+  //     bounced: 87,
+  //     unsubscribed: 23,
+  //     complaints: 1,
+  //     revenue: 28450,
+  //     topLinks: [
+  //       { url: "https://example.com/new-collection", clicks: 523 },
+  //       { url: "https://example.com/lookbook", clicks: 201 },
+  //       { url: "https://example.com/about", clicks: 116 }
+  //     ],
+  //     deviceStats: {
+  //       desktop: 52,
+  //       mobile: 35,
+  //       tablet: 13
+  //     },
+  //     timeStats: [
+  //       { hour: '6AM', opens: 80 },
+  //       { hour: '9AM', opens: 320 },
+  //       { hour: '12PM', opens: 420 },
+  //       { hour: '3PM', opens: 380 },
+  //       { hour: '6PM', opens: 650 },
+  //       { hour: '9PM', opens: 280 }
+  //     ]
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Weekly Newsletter #24",
+  //     status: "Draft",
+  //     sent: 0,
+  //     opened: 0,
+  //     clicked: 0,
+  //     date: "2024-05-24",
+  //     subject: "This Week's Top Stories",
+  //     bounced: 0,
+  //     unsubscribed: 0,
+  //     complaints: 0,
+  //     revenue: 0,
+  //     topLinks: [],
+  //     deviceStats: {
+  //       desktop: 0,
+  //       mobile: 0,
+  //       tablet: 0
+  //     },
+  //     timeStats: []
+  //   }
+  // ];
+
+  const deleteCampaign = async (id) => {
+      try {
+          const response = await fetch(`http://localhost:5000/campaigns/${id}`, {
+              method: 'DELETE'
+          });
+          const result = await response.json();
+  
+          if (result.success) {
+              toast.success('Campaign deleted successfully!', { duration: 2000 });
+              fetchCampaigns();
+          } else {
+              throw new Error(result.message);
+          }
+      } catch (error) {
+          console.error('Error deleting campaign:', error);
+          throw error;
+      }
+  };
 
   const handleCampaignClick = (campaign) => {
     setSelectedCampaign(campaign);
     setActiveView('analytics');
+  };
+
+   const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const MetricCard = ({ icon: Icon, title, value, subtitle, color = "blue" }) => (
@@ -165,7 +195,7 @@ const CampaignAnalytics = () => {
                     className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600"
                     onClick={() => handleCampaignClick(campaign)}
                   >
-                    {campaign.name}
+                    {campaign.campaign_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -176,14 +206,14 @@ const CampaignAnalytics = () => {
                       {campaign.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.sent.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">154</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {campaign.sent > 0 ? ((campaign.opened / campaign.sent) * 100).toFixed(1) + '%' : '0%'}
+                    60%
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {campaign.sent > 0 ? ((campaign.clicked / campaign.sent) * 100).toFixed(1) + '%' : '0%'}
+                   14%
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{campaign.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(campaign.created_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button 
@@ -195,7 +225,7 @@ const CampaignAnalytics = () => {
                       <button className="text-green-600 hover:text-green-900">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button onClick={()=>deleteCampaign(campaign.id)} className="text-red-600 hover:text-red-900">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>

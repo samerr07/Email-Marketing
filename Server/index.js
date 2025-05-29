@@ -19,6 +19,7 @@ const {
     createTransporter,
     sendEmailsJob
 } = require('./services/emailhelper');
+const campaignScheduler = require('./services/schedulerservice');
 
 
 dotenv.config();
@@ -44,12 +45,13 @@ app.use(cors({
 app.use(express.static('public'));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Global variable to track active sending processes
 const activeSendingJobs = new Map();
 
 // Ensure upload directories exist
-const dirs = ['uploads', 'uploads/excel', 'uploads/html'];
+const dirs = ['uploads', 'uploads/excel', 'uploads/html','uploads/images'];
 dirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -57,9 +59,31 @@ dirs.forEach(dir => {
 });
 
 // Configure storage
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         const dest = file.fieldname === 'excel' ? 'uploads/excel/' : 'uploads/html/';
+//         cb(null, dest);
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, Date.now() + '-' + file.originalname);
+//     }
+// });
+
+campaignScheduler.setActiveSendingJobs(activeSendingJobs);
+
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dest = file.fieldname === 'excel' ? 'uploads/excel/' : 'uploads/html/';
+        let dest;
+        if (file.fieldname === 'excel') {
+            dest = 'uploads/excel/';
+        } else if (file.fieldname === 'template') {
+            dest = 'uploads/html/';
+        } else if (file.fieldname === 'image') {
+            dest = 'uploads/images/';
+        } else {
+            dest = 'uploads/'; // fallback directory
+        }
         cb(null, dest);
     },
     filename: (req, file, cb) => {
@@ -85,11 +109,41 @@ const upload = multer({
             } else {
                 cb(new Error('Only HTML files are allowed'), false);
             }
+        } else if (file.fieldname === 'image') {
+            if (file.mimetype.startsWith('image/') || file.originalname.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Only image files are allowed'), false);
+            }
         } else {
-            cb(new Error('Invalid field name'), false);
+            cb(new Error('Invalid field name. Allowed fields: excel, template, image'), false);
         }
     }
 });
+
+// const upload = multer({
+//     storage,
+//     limits: {
+//         fileSize: 10 * 1024 * 1024 // 10MB limit
+//     },
+//     fileFilter: (req, file, cb) => {
+//         if (file.fieldname === 'excel') {
+//             if (file.mimetype.includes('spreadsheet') || file.originalname.match(/\.(xlsx|xls)$/)) {
+//                 cb(null, true);
+//             } else {
+//                 cb(new Error('Only Excel files are allowed'), false);
+//             }
+//         } else if (file.fieldname === 'template') {
+//             if (file.mimetype === 'text/html' || file.originalname.match(/\.(html|htm)$/)) {
+//                 cb(null, true);
+//             } else {
+//                 cb(new Error('Only HTML files are allowed'), false);
+//             }
+//         } else {
+//             cb(new Error('Invalid field name'), false);
+//         }
+//     }
+// });
 
 
 // Serve the HTML file (if you want to serve it from backend)
@@ -107,59 +161,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Preview Excel file endpoint
-// app.post('/preview-excel', upload.single('excel'), (req, res) => {
-//     try {
-//         if (!req.file) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'No Excel file uploaded'
-//             });
-//         }
 
-//         const excelPath = req.file.path;
-//         const workbook = xlsx.readFile(excelPath);
-//         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-//         const data = xlsx.utils.sheet_to_json(sheet);
-
-//         if (!data || data.length === 0) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Excel file is empty or has no valid data'
-//             });
-//         }
-
-//         // Get headers/columns
-//         const headers = Object.keys(data[0] || {});
-
-//         // Validate that we have headers
-//         if (headers.length === 0) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'No columns found in Excel file'
-//             });
-//         }
-
-//         // Return first few rows and headers
-//         res.json({
-//             success: true,
-//             headers,
-//             sample: data.slice(0, 5),
-//             totalRows: data.length,
-//             filePath: excelPath
-//         });
-//     } catch (err) {
-//         console.error('Error processing Excel file:', err);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error processing Excel file',
-//             error: err.message
-//         });
-//     }
-// });
-
-// Upload HTML template endpoint
-// adjust path as needed
 
 app.post('/preview-excel', upload.single('excel'), (req, res) => {
     //neww
@@ -191,32 +193,7 @@ app.post('/preview-excel', upload.single('excel'), (req, res) => {
     }
 });
 
-// app.post('/upload-template', upload.single('template'), (req, res) => {
-//     try {
-//         if (!req.file) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'No template file uploaded'
-//             });
-//         }
 
-//         const htmlPath = req.file.path;
-//         const template = fs.readFileSync(htmlPath, 'utf8');
-
-//         res.json({
-//             success: true,
-//             filePath: htmlPath,
-//             template
-//         });
-//     } catch (err) {
-//         console.error('Error processing HTML template:', err);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error processing HTML template',
-//             error: err.message
-//         });
-//     }
-// });
 
 // Test SMTP connection endpoint
 
@@ -251,46 +228,6 @@ app.post('/upload-template', upload.single('template'), (req, res) => {
 });
 
 
-// app.post('/test-connection', async(req, res) => {
-//     const { smtpServer, smtpPort, emailUser, emailPass } = req.body;
-
-//     // Validate required fields
-//     if (!smtpServer || !smtpPort || !emailUser || !emailPass) {
-//         return res.status(400).json({
-//             success: false,
-//             message: 'Missing required SMTP configuration fields'
-//         });
-//     }
-
-//     try {
-//         const transporter = nodemailer.createTransport({
-//             host: smtpServer,
-//             port: parseInt(smtpPort),
-//             secure: smtpPort === '465', // true for 465, false for other ports
-//             auth: {
-//                 user: emailUser,
-//                 pass: emailPass
-//             },
-//             connectionTimeout: 10000,
-//             socketTimeout: 30000,
-//         });
-
-//         // Verify connection
-//         await transporter.verify();
-
-//         res.json({
-//             success: true,
-//             message: 'SMTP connection successful!'
-//         });
-//     } catch (err) {
-//         console.error('SMTP connection failed:', err);
-//         res.json({
-//             success: false,
-//             message: 'SMTP connection failed',
-//             error: err.message
-//         });
-//     }
-// });
 
 // Stop sending endpoint
 
@@ -341,271 +278,7 @@ app.post('/stop-sending', (req, res) => {
     }
 });
 
-// Main send endpoint
-// app.post('/send', async(req, res) => {
-//     const {
-//         excelPath,
-//         htmlPath,
-//         emailColumn,
-//         nameColumn,
-//         subjectLine,
-//         smtpServer,
-//         smtpPort,
-//         emailUser,
-//         emailPass,
-//         senderName,
-//         variables,
-//         delayBetweenEmails = 2000,
-//         template // For pasted templates
-//     } = req.body;
 
-//     try {
-//         // Validate inputs
-//         if (!emailColumn || !smtpServer || !emailUser || !emailPass || !subjectLine) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Missing required parameters'
-//             });
-//         }
-
-//         // Validate that we have either excelPath or template content
-//         if (!excelPath || (!htmlPath && !template)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Missing Excel file or HTML template'
-//             });
-//         }
-
-//         // Create a unique job ID for this sending process
-//         const jobId = Date.now().toString();
-
-//         // Initialize job data in the map
-//         activeSendingJobs.set(jobId, {
-//             shouldStop: false,
-//             startTime: new Date(),
-//             totalEmails: 0,
-//             sentEmails: 0,
-//             failedEmails: 0
-//         });
-
-//         // Read the data files
-//         let data, templateContent;
-
-//         try {
-//             // Read Excel data
-//             if (!fs.existsSync(excelPath)) {
-//                 throw new Error('Excel file not found');
-//             }
-
-//             const workbook = xlsx.readFile(excelPath);
-//             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-//             data = xlsx.utils.sheet_to_json(sheet);
-
-//             // Read template
-//             if (template) {
-//                 templateContent = template;
-//             } else if (htmlPath && fs.existsSync(htmlPath)) {
-//                 templateContent = fs.readFileSync(htmlPath, 'utf8');
-//             } else {
-//                 throw new Error('Template not found');
-//             }
-//         } catch (readError) {
-//             activeSendingJobs.delete(jobId);
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Error reading files: ' + readError.message
-//             });
-//         }
-
-//         // Validate email list
-//         const validRecipients = data.filter(row => {
-//             const email = row[emailColumn];
-//             return email && typeof email === 'string' && email.includes('@') && email.includes('.');
-//         });
-
-//         if (validRecipients.length === 0) {
-//             // Clean up the job data
-//             activeSendingJobs.delete(jobId);
-
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'No valid email addresses found in the selected column'
-//             });
-//         }
-
-//         // Enforce email sending limit for safety
-//         const MAX_EMAILS = 500;
-//         const recipientsToProcess = validRecipients.slice(0, MAX_EMAILS);
-
-//         // Update job data with total emails
-//         const jobData = activeSendingJobs.get(jobId);
-//         jobData.totalEmails = recipientsToProcess.length;
-
-//         // Send initial response with job ID
-//         res.json({
-//             success: true,
-//             jobId,
-//             total: recipientsToProcess.length,
-//             limit: MAX_EMAILS,
-//             skipped: validRecipients.length > MAX_EMAILS ? validRecipients.length - MAX_EMAILS : 0
-//         });
-
-//         // Configure email transporter with improved settings
-//         const transporter = nodemailer.createTransport({
-//             host: smtpServer,
-//             port: parseInt(smtpPort),
-//             secure: smtpPort === '465',
-//             auth: {
-//                 user: emailUser,
-//                 pass: emailPass
-//             },
-//             pool: true,
-//             maxConnections: 3,
-//             maxMessages: 50,
-//             rateDelta: delayBetweenEmails,
-//             rateLimit: 3,
-//             connectionTimeout: 15000,
-//             socketTimeout: 45000,
-//             debug: false
-//         });
-
-//         // Process and send emails in the background
-//         (async() => {
-//             let success = 0;
-//             let failed = 0;
-
-//             console.log(`Starting to send ${recipientsToProcess.length} emails for job ${jobId}`);
-
-//             for (let i = 0; i < recipientsToProcess.length; i++) {
-//                 // Check if should stop
-//                 const currentJobData = activeSendingJobs.get(jobId);
-//                 if (!currentJobData || currentJobData.shouldStop) {
-//                     console.log(`Job ${jobId} stopped by user or not found`);
-//                     if (currentJobData) {
-//                         currentJobData.sentEmails = success;
-//                         currentJobData.failedEmails = failed;
-//                         currentJobData.stopped = true;
-//                     }
-//                     break;
-//                 }
-
-//                 const row = recipientsToProcess[i];
-//                 const email = row[emailColumn];
-//                 const name = nameColumn ? row[nameColumn] || '' : '';
-
-//                 try {
-//                     // Personalize the email
-//                     let personalized = templateContent;
-
-//                     // Replace all variables based on mappings
-//                     if (Array.isArray(variables)) {
-//                         variables.forEach(variable => {
-//                             if (variable.placeholder && variable.column && row[variable.column]) {
-//                                 const value = String(row[variable.column]) || '';
-//                                 const regex = new RegExp(`{{${variable.placeholder}}}`, 'g');
-//                                 personalized = personalized.replace(regex, value);
-//                             }
-//                         });
-//                     }
-
-//                     // Replace name placeholder in subject and content
-//                     const personalizedSubject = subjectLine.replace(/{{name}}/gi, name);
-//                     personalized = personalized.replace(/{{name}}/gi, name);
-
-//                     // Send email with retry logic
-//                     let retries = 2;
-//                     let sent = false;
-
-//                     while (retries >= 0 && !sent) {
-//                         try {
-//                             await transporter.sendMail({
-//                                 from: `"${senderName || 'Email Marketing Tool'}" <${emailUser}>`,
-//                                 to: email,
-//                                 subject: personalizedSubject,
-//                                 html: personalized,
-//                             });
-
-//                             sent = true;
-//                             success++;
-
-//                             // Update job data
-//                             const currentJobData = activeSendingJobs.get(jobId);
-//                             if (currentJobData) {
-//                                 currentJobData.sentEmails = success;
-//                             }
-
-//                             console.log(`Email ${i + 1}/${recipientsToProcess.length} sent successfully to ${email}`);
-
-//                         } catch (sendErr) {
-//                             retries--;
-//                             console.error(`Send attempt failed for ${email}:`, sendErr.message);
-
-//                             if (retries < 0) {
-//                                 throw sendErr; // Re-throw if no more retries
-//                             }
-
-//                             // Wait before retrying
-//                             await new Promise(resolve => setTimeout(resolve, 1000));
-//                         }
-//                     }
-//                 } catch (err) {
-//                     failed++;
-//                     console.error(`Failed to send email to ${email}:`, err.message);
-
-//                     // Update job data
-//                     const currentJobData = activeSendingJobs.get(jobId);
-//                     if (currentJobData) {
-//                         currentJobData.failedEmails = failed;
-//                     }
-//                 }
-
-//                 // Add a delay between emails to avoid being flagged as spam
-//                 if (i < recipientsToProcess.length - 1) { // Don't delay after the last email
-//                     await new Promise(resolve => setTimeout(resolve, delayBetweenEmails));
-//                 }
-//             }
-
-//             // Update job as complete
-//             const finalJobData = activeSendingJobs.get(jobId);
-//             if (finalJobData) {
-//                 finalJobData.completed = true;
-//                 finalJobData.endTime = new Date();
-//                 console.log(`Job ${jobId} completed: ${success} sent, ${failed} failed`);
-//             }
-
-//             // Close the transporter
-//             transporter.close();
-
-//             // Keep job data for 1 hour, then clean up
-//             setTimeout(() => {
-//                 activeSendingJobs.delete(jobId);
-//                 console.log(`Cleaned up job data for ${jobId}`);
-//             }, 3600000); // 1 hour
-
-//         })().catch(err => {
-//             console.error('Background email sending error:', err);
-//             const jobData = activeSendingJobs.get(jobId);
-//             if (jobData) {
-//                 jobData.error = err.message;
-//                 jobData.completed = true;
-//             }
-//         });
-
-//     } catch (err) {
-//         console.error('Send endpoint error:', err);
-
-//         // Clean up job if it was created
-//         if (activeSendingJobs.has(jobId)) {
-//             activeSendingJobs.delete(jobId);
-//         }
-
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error processing request',
-//             error: err.message
-//         });
-//     }
-// });
 
 
 app.post('/send', async(req, res) => {
@@ -683,165 +356,25 @@ app.post('/send', async(req, res) => {
 });
 
 
-// const {
-//     readExcelData,
-//     getTemplateContent,
-//     filterValidRecipients,
-//     createTransporter,
-//     sendEmailsJob
-// } = require('./emailHelpers');
-
-// const activeSendingJobs = new Map();
-
-// app.post('/campaign', upload.fields([
-//     { name: 'excel', maxCount: 1 },
-//     { name: 'template', maxCount: 1 }
-// ]), async(req, res) => {
-//     try {
-//         // Validate file presence
-//         // if (!req.files || !req.files.excel || !req.files.template) {
-//         //     return res.status(400).json({
-//         //         success: false,
-//         //         message: 'Excel and template files are required'
-//         //     });
-//         // }
-//         if (!req.files || !req.files.excel) {
-//     return res.status(400).json({
-//         success: false,
-//         message: 'Excel file is required'
-//     });
-// }
-
-//         const excelFile = req.files.excel[0];
-//         const templateFile = req.files.template[0];
 
 
 
-//         // 1. Preview Excel data
-//         const excelPreview = previewExcel(excelFile.path);
-
-//         // 2. Extract values from body
-//         const {
-//             emailColumn,
-//             nameColumn,
-//             subjectLine,
-//             smtpServer,
-//             smtpPort,
-//             emailUser,
-//             emailPass,
-//             senderName,
-//             variables,
-//             delayBetweenEmails = 2000,
-//             template: pastedTemplate,
-//             campaign_name
-
-//         } = req.body;
-//         // Validate SMTP
-//         await testSMTPConnection({ smtpServer, smtpPort, emailUser, emailPass });
-
-//         // 3. Use pasted template or uploaded template file
-//         // let templateContent = pastedTemplate && pastedTemplate.trim() !== '' ?
-//         //     pastedTemplate :
-//         //     parseHtmlTemplate(templateFile.path);
-//         let templateContent = req.body.template && req.body.template.trim() !== '' ?
-//     req.body.template :
-//     (templateFile ? parseHtmlTemplate(templateFile.path) : '');
-
-//         // 4. Save campaign to Supabase
-//         const { data, error } = await supabase
-//             .from('campaigns')
-//             .insert([{
-//                 excel_path: excelFile.path,
-//                 html_path: templateFile.path,
-//                 email_column: emailColumn,
-//                 name_column: nameColumn,
-//                 subject_line: subjectLine,
-//                 smtp_server: smtpServer,
-//                 smtp_port: smtpPort,
-//                 email_user: emailUser,
-//                 email_pass: emailPass,
-//                 sender_name: senderName,
-//                 variables,
-//                 delay_between_emails: parseInt(delayBetweenEmails),
-//                 template: templateContent,
-//                 campaign_name: campaign_name,
-//                 status: 'pending'
-//             }])
-//             .select()
-//             .single();
-
-//         if (error) throw error;
-
-//         // ✅ 5. START EMAIL SENDING IMMEDIATELY USING HELPERS
-//         const recipientsRaw = readExcelData(excelFile.path);
-//         const recipients = filterValidRecipients(recipientsRaw, emailColumn);
-//         const transporter = createTransporter({ smtpServer, smtpPort, emailUser, emailPass, delayBetweenEmails });
-
-//         const jobId = `campaign-${data.id}`;
-//         const jobInfo = {
-//             id: jobId,
-//             total: recipients.length,
-//             sentEmails: 0,
-//             failedEmails: 0,
-//             shouldStop: false,
-//             completed: false,
-//             startedAt: new Date()
-//         };
-//         activeSendingJobs.set(jobId, jobInfo);
-
-//         // Start sending (non-blocking — no need to await it unless you want to)
-//         sendEmailsJob({
-//             jobId,
-//             recipients,
-//             emailColumn,
-//             nameColumn,
-//             subjectLine,
-//             senderName,
-//             templateContent,
-//             variables: Array.isArray(variables) ? variables : JSON.parse(variables),
-//             transporter,
-//             delayBetweenEmails: parseInt(delayBetweenEmails),
-//             activeSendingJobs
-//         });
-
-//         // ✅ 6. Respond with success
-//         res.json({
-//             success: true,
-//             message: 'Campaign created and emails are being sent',
-//             campaign: data,
-//             excelPreview
-//         });
-
-//     } catch (err) {
-//         console.error('Error creating campaign:', err);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error creating campaign',
-//             error: err.message
-//         });
-//     }
-// });
 
 app.post('/campaign', upload.fields([
     { name: 'excel', maxCount: 1 },
     { name: 'template', maxCount: 1 }
 ]), async(req, res) => {
     try {
-        // if (!req.files || !req.files.excel || (!req.files.template && (!req.body.template || req.body.template.trim() === ''))) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Excel file and either HTML file or pasted template are required'
-        //     });
-        // }
-        
-
+        // Check if Excel file exists
+        if (!req.files || !req.files.excel || !req.files.excel[0]) {
+            return res.status(400).json({
+                success: false,
+                message: 'Excel file is required'
+            });
+        }
 
         const excelFile = req.files.excel[0];
-        // const templateFile = req.files.template[0];
         const templateFile = req.files && req.files.template && req.files.template[0];
-
-
-
 
         // 1. Preview Excel data
         const excelPreview = previewExcel(excelFile.path);
@@ -858,22 +391,35 @@ app.post('/campaign', upload.fields([
             senderName,
             variables,
             delayBetweenEmails = 2000,
-            template: pastedTemplate,
+            templateContent, // Use templateContent instead of template
             campaign_name
-
         } = req.body;
+        console.log('Received body:', req.body);
+
+        // Validate required fields
+        if (!emailColumn || !subjectLine || !smtpServer || !emailUser || !emailPass) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields: emailColumn, subjectLine, smtpServer, emailUser, emailPass'
+            });
+        }
+
         // Validate SMTP
         await testSMTPConnection({ smtpServer, smtpPort, emailUser, emailPass });
 
-        // 3. Use pasted template or uploaded template file
-        // let templateContent = pastedTemplate && pastedTemplate.trim() !== '' ?
-        //     pastedTemplate :
-        //     templateFile ? parseHtmlTemplate(templateFile.path) : '';
-        const safeTemplate = typeof pastedTemplate === 'string' ? pastedTemplate.trim() : '';
-
-let templateContent = safeTemplate !== ''
-    ? safeTemplate
-    : parseHtmlTemplate(templateFile?.path);
+        // 3. Use template content or uploaded template file
+        let finalTemplateContent = '';
+        
+        if (templateContent && typeof templateContent === 'string' && templateContent.trim() !== '') {
+            finalTemplateContent = templateContent.trim();
+        } else if (templateFile && templateFile.path) {
+            finalTemplateContent = parseHtmlTemplate(templateFile.path);
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Either template content or template file is required'
+            });
+        }
 
         // 4. Save campaign to Supabase
         const { data, error } = await supabase
@@ -891,7 +437,7 @@ let templateContent = safeTemplate !== ''
                 sender_name: senderName,
                 variables,
                 delay_between_emails: parseInt(delayBetweenEmails),
-                template: templateContent,
+                template: finalTemplateContent,
                 campaign_name: campaign_name,
                 status: 'pending'
             }])
@@ -900,7 +446,7 @@ let templateContent = safeTemplate !== ''
 
         if (error) throw error;
 
-        // ✅ 5. START EMAIL SENDING IMMEDIATELY USING HELPERS
+        // 5. START EMAIL SENDING IMMEDIATELY USING HELPERS
         const recipientsRaw = readExcelData(excelFile.path);
         const recipients = filterValidRecipients(recipientsRaw, emailColumn);
         const transporter = createTransporter({ smtpServer, smtpPort, emailUser, emailPass, delayBetweenEmails });
@@ -917,7 +463,7 @@ let templateContent = safeTemplate !== ''
         };
         activeSendingJobs.set(jobId, jobInfo);
 
-        // Start sending (non-blocking — no need to await it unless you want to)
+        // Start sending (non-blocking)
         sendEmailsJob({
             jobId,
             recipients,
@@ -925,17 +471,20 @@ let templateContent = safeTemplate !== ''
             nameColumn,
             subjectLine,
             senderName,
-            templateContent,
-            variables: Array.isArray(variables) ? variables : JSON.parse(variables),
+            templateContent: finalTemplateContent,
+            variables: Array.isArray(variables) ? variables : JSON.parse(variables || '[]'),
             transporter,
             delayBetweenEmails: parseInt(delayBetweenEmails),
-            activeSendingJobs
+            activeSendingJobs,
+             uploadsPath: './uploads/images/' // Add this for CID support
         });
 
-        // ✅ 6. Respond with success
+        // 6. Respond with success
         res.json({
             success: true,
             message: 'Campaign created and emails are being sent',
+            jobId: jobId,
+            total: recipients.length,
             campaign: data,
             excelPreview
         });
@@ -948,6 +497,152 @@ let templateContent = safeTemplate !== ''
             error: err.message
         });
     }
+});
+
+app.post('/upload-image', upload.single('image'), (req, res) => {
+    try {
+        const imageUrl = `/uploads/images/${req.file.filename}`;
+        res.json({
+            success: true,
+            imageUrl: imageUrl,
+            originalName: req.file.originalname,
+            filename: req.file.filename, // Include filename for CID reference
+            cidName: req.file.filename.split('.')[0] // CID name without extension
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+app.delete('/campaigns/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // if (!id || isNaN(parseInt(id))) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'Valid campaign ID is required'
+        //     });
+        // }
+
+        // First, check if campaign exists and get file paths for cleanup
+        const { data: campaign, error: fetchError } = await supabase
+            .from('campaigns')
+            .select('id, excel_path, html_path, status')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            if (fetchError.code === 'PGRST116') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Campaign not found'
+                });
+            }
+            throw fetchError;
+        }
+
+        // Check if campaign is currently running
+        if (campaign.status === 'sending') {
+            // Stop the sending job if it's running
+            const jobId = `campaign-${id}`;
+            if (activeSendingJobs.has(jobId)) {
+                const jobInfo = activeSendingJobs.get(jobId);
+                jobInfo.shouldStop = true;
+                activeSendingJobs.delete(jobId);
+            }
+        }
+
+        // Delete the campaign from database
+        const { error: deleteError } = await supabase
+            .from('campaigns')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) {
+            throw deleteError;
+        }
+
+        // Clean up files if they exist
+        const fs = require('fs');
+        const path = require('path');
+
+        if (campaign.excel_path && fs.existsSync(campaign.excel_path)) {
+            try {
+                fs.unlinkSync(campaign.excel_path);
+                console.log(`Deleted Excel file: ${campaign.excel_path}`);
+            } catch (fileError) {
+                console.warn(`Could not delete Excel file: ${campaign.excel_path}`, fileError.message);
+            }
+        }
+
+        if (campaign.html_path && fs.existsSync(campaign.html_path)) {
+            try {
+                fs.unlinkSync(campaign.html_path);
+                console.log(`Deleted HTML file: ${campaign.html_path}`);
+            } catch (fileError) {
+                console.warn(`Could not delete HTML file: ${campaign.html_path}`, fileError.message);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Campaign deleted successfully',
+            deletedId: parseInt(id)
+        });
+
+    } catch (error) {
+        console.error('Error deleting campaign:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting campaign',
+            error: error.message
+        });
+    }
+});
+
+// app.post('/upload-image', upload.single('image'), (req, res) => {
+//     try {
+//         const imageUrl = `/uploads/images/${req.file.filename}`;
+//         res.json({
+//             success: true,
+//             imageUrl: imageUrl,
+//             originalName: req.file.originalname
+//         });
+//     } catch (error) {
+//         res.json({
+//             success: false,
+//             message: error.message
+//         });
+//     }
+// });
+
+app.get('/get_campaigns', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('*');
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({
+      success: true,
+      data: data || []
+    });
+
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching campaigns',
+      error: error.message
+    });
+  }
 });
 
 
@@ -1039,6 +734,305 @@ app.post('/cleanup', (req, res) => {
     }
 });
 
+
+app.post('/campaigns/:id/schedule', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { schedulePattern, timezone = 'Asia/Kolkata' } = req.body;
+
+        if (!schedulePattern) {
+            return res.status(400).json({
+                success: false,
+                message: 'Schedule pattern is required'
+            });
+        }
+
+        // Validate cron pattern
+        const validation = campaignScheduler.validateCronPattern(schedulePattern);
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid cron pattern',
+                error: validation.error
+            });
+        }
+
+        // Get campaign from database
+        const { data: campaign, error: fetchError } = await supabase
+            .from('campaigns')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !campaign) {
+            return res.status(404).json({
+                success: false,
+                message: 'Campaign not found'
+            });
+        }
+
+        // Update campaign with schedule info
+        const { error: updateError } = await supabase
+            .from('campaigns')
+            .update({
+                is_scheduled: true,
+                schedule_pattern: schedulePattern,
+                status: 'scheduled',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        // Schedule the campaign
+        const updatedCampaign = { ...campaign, schedule_pattern: schedulePattern, is_scheduled: true };
+        await campaignScheduler.scheduleCampaign(updatedCampaign);
+
+        res.json({
+            success: true,
+            message: 'Campaign scheduled successfully',
+            schedule: {
+                pattern: schedulePattern,
+                timezone: timezone
+            }
+        });
+
+    } catch (error) {
+        console.error('Error scheduling campaign:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error scheduling campaign',
+            error: error.message
+        });
+    }
+});
+
+// Unschedule a campaign
+app.delete('/campaigns/:id/schedule', async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(id)
+
+
+        await campaignScheduler.unscheduleCampaign(id);
+
+        res.json({
+            success: true,
+            message: 'Campaign unscheduled successfully'
+        });
+
+    } catch (error) {
+        console.error('Error unscheduling campaign:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error unscheduling campaign',
+            error: error.message
+        });
+    }
+});
+
+// Get campaign schedule status
+app.get('/campaigns/:id/schedule', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: campaign, error } = await supabase
+            .from('campaigns')
+            .select('is_scheduled, schedule_pattern, last_executed, execution_count, last_error, status')
+            .eq('id', id)
+            .single();
+
+        if (error || !campaign) {
+            return res.status(404).json({
+                success: false,
+                message: 'Campaign not found'
+            });
+        }
+
+        const scheduleStatus = campaignScheduler.getScheduleStatus(id);
+
+        res.json({
+            success: true,
+            schedule: {
+                isScheduled: campaign.is_scheduled,
+                pattern: campaign.schedule_pattern,
+                lastExecuted: campaign.last_executed,
+                executionCount: campaign.execution_count,
+                lastError: campaign.last_error,
+                status: campaign.status,
+                jobActive: scheduleStatus.jobExists
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting schedule status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting schedule status',
+            error: error.message
+        });
+    }
+});
+
+// Get all scheduled campaigns
+app.get('/campaigns/scheduled', async (req, res) => {
+    try {
+        const { data: campaigns, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .eq('is_scheduled', true)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const scheduledCampaigns = campaigns.map(campaign => ({
+            ...campaign,
+            jobActive: campaignScheduler.getScheduleStatus(campaign.id).jobExists
+        }));
+
+        res.json({
+            success: true,
+            campaigns: scheduledCampaigns
+        });
+
+    } catch (error) {
+        console.error('Error getting scheduled campaigns:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting scheduled campaigns',
+            error: error.message
+        });
+    }
+});
+
+// Validate cron pattern
+app.post('/validate-cron', (req, res) => {
+    try {
+        const { pattern } = req.body;
+
+        if (!pattern) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cron pattern is required'
+            });
+        }
+
+        const validation = campaignScheduler.validateCronPattern(pattern);
+        
+        if (validation.valid) {
+            const nextExecutions = campaignScheduler.getNextExecutions(pattern);
+            
+            res.json({
+                success: true,
+                valid: true,
+                pattern: pattern,
+                nextExecutions: nextExecutions.executions || []
+            });
+        } else {
+            res.json({
+                success: false,
+                valid: false,
+                error: validation.error
+            });
+        }
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error validating cron pattern',
+            error: error.message
+        });
+    }
+});
+
+// Get predefined schedule patterns
+app.get('/schedule-patterns', (req, res) => {
+    const { SchedulePatterns } = require('./services/schedulerservice');
+    
+    const patterns = {
+        testing: {
+            'Every Minute': SchedulePatterns.EVERY_MINUTE,
+        },
+        hourly: {
+            'Every Hour': SchedulePatterns.EVERY_HOUR,
+            'Every 2 Hours': SchedulePatterns.EVERY_2_HOURS,
+            'Every 6 Hours': SchedulePatterns.EVERY_6_HOURS,
+            'Every 12 Hours': SchedulePatterns.EVERY_12_HOURS,
+        },
+        daily: {
+            'Daily at 9 AM': SchedulePatterns.DAILY_9AM,
+            'Daily at 6 PM': SchedulePatterns.DAILY_6PM,
+            'Daily at Midnight': SchedulePatterns.DAILY_MIDNIGHT,
+        },
+        weekly: {
+            'Weekly Monday 9 AM': SchedulePatterns.WEEKLY_MONDAY_9AM,
+            'Weekly Friday 5 PM': SchedulePatterns.WEEKLY_FRIDAY_5PM,
+        },
+        monthly: {
+            'Monthly 1st at 9 AM': SchedulePatterns.MONTHLY_FIRST_9AM,
+            'Monthly 15th at 6 PM': SchedulePatterns.MONTHLY_15TH_6PM,
+        }
+    };
+
+    res.json({
+        success: true,
+        patterns: patterns,
+        info: {
+            format: 'minute hour day month dayOfWeek',
+            examples: {
+                '0 9 * * *': 'Every day at 9:00 AM',
+                '0 */2 * * *': 'Every 2 hours',
+                '0 9 * * 1': 'Every Monday at 9:00 AM',
+                '0 18 1 * *': 'First day of every month at 6:00 PM'
+            }
+        }
+    });
+});
+
+// Trigger immediate execution of a scheduled campaign (for testing)
+app.post('/campaigns/:id/execute-now', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: campaign, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !campaign) {
+            return res.status(404).json({
+                success: false,
+                message: 'Campaign not found'
+            });
+        }
+
+        if (!campaign.is_scheduled) {
+            return res.status(400).json({
+                success: false,
+                message: 'Campaign is not scheduled'
+            });
+        }
+
+        // Execute the campaign immediately
+        await campaignScheduler.executeCampaign(campaign);
+
+        res.json({
+            success: true,
+            message: 'Campaign execution triggered',
+            campaignName: campaign.campaign_name
+        });
+
+    } catch (error) {
+        console.error('Error executing campaign:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error executing campaign',
+            error: error.message
+        });
+    }
+});
+
 // Error handling middleware
 app.use((error, req, res, next) => {
     if (error instanceof multer.MulterError) {
@@ -1077,6 +1071,7 @@ process.on('SIGTERM', () => {
             console.log(`Stopping job ${jobId} due to server shutdown`);
         }
     });
+     campaignScheduler.cleanup();
 
     // Give some time for jobs to stop gracefully
     setTimeout(() => {
@@ -1094,6 +1089,7 @@ process.on('SIGINT', () => {
             console.log(`Stopping job ${jobId} due to server shutdown`);
         }
     });
+     campaignScheduler.cleanup();
 
     // Give some time for jobs to stop gracefully
     setTimeout(() => {

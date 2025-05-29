@@ -1,12 +1,900 @@
+// import EmailMarketingTool from './EmailMarketingTool';
+// import React, { useEffect, useState } from 'react';
+// import axios from 'axios';
+// import { ToastContainer, toast } from 'react-toastify';
+// import { Mail, Users, BarChart3, Settings, Send, Plus, Eye, Edit, Trash2, Search, Filter, Calendar, TrendingUp, User, LogOut, Bell, Menu, X } from 'lucide-react';
+// import CampaignAnalytics from './CampaignAnalytics';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { useNavigate } from 'react-router-dom';
+// import { getProfile, setAuthentication } from '../redux/userSlice';
+// import CampaignScheduler from './CampaignScheduler';
+
+// const Dashboard = () => {
+//     const { isAuthenticated } = useSelector((state) => state.user);
+//     console.log(isAuthenticated)
+
+//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//   const [activeTab, setActiveTab] = useState('dashboard');
+//   const [showUserModal, setShowUserModal] = useState(false);
+//   const [editingUser, setEditingUser] = useState(null);
+//   const [campaigns, setCampaigns] = useState([])
+//   const [error, setError] = useState(null);
+
+//   const [users, setUsers] = useState([]);
+//   const dispatch = useDispatch();
+//   const navigate = useNavigate();
+
+
+
+//   const stats = {
+//     totalSubscribers: 12450,
+//     totalCampaigns: 25,
+//     openRate: 71.2,
+//     clickRate: 18.7
+//   };
+
+//   const handleLogout = () => {
+//     dispatch(setAuthentication(false));
+//     dispatch(getProfile(null));
+//     toast.success('Logout successfully!', {
+//       duration: 4000,
+//       position: 'top-right',
+//     });
+//     navigate("/");
+//   };
+
+//   // User Management Functions
+//   const handleCreateUser = async (userData) => {
+//     const newUser = {
+//       id: users.length + 1,
+//       ...userData,
+//       status: 'Active',
+//       lastLogin: 'Never',
+//       created: new Date().toISOString().split('T')[0]
+//     };
+//     try {
+//       const response = await axios.post('http://localhost:5000/api/auth/create_user', userData, {
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         withCredentials: true,
+//       });
+
+//       const data = response.data;
+//       console.log(data);
+
+
+
+//       toast.success('User Logged In successfully!', {
+//         duration: 4000,
+//         position: 'top-right',
+//       });
+//       fetchUsers();
+
+//       // navigate("/dashboard")
+
+//     } catch (err) {
+//       // Axios error handling
+//       console.log(err)
+//       // const errorMessage = err.response?.data?.message || err.message || 'An error occurred during login';
+
+//     }
+//     // setUsers([...users, newUser]);
+//     setShowUserModal(false);
+//   };
+
+//   console.log(campaigns)
+
+//   const fetchCampaigns = async () => {
+//     try {
+     
+//       const response = await axios.get('http://localhost:5000/get_campaigns');
+      
+//       if (response.data.success) {
+//         setCampaigns(response.data.data);
+//       } else {
+//         setError('Failed to fetch campaigns');
+//       }
+//     } catch (err) {
+//       setError(err.response?.data?.message || 'Error fetching campaigns');
+//     } 
+//   };
+
+//   const fetchUsers = async () => {
+//     try {
+//       const response = await axios.get('http://localhost:5000/api/auth/users', {
+//         withCredentials: true,
+//       });
+//       const data = response.data;
+//       console.log(data);
+//       setUsers(data?.data);
+
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   }
+
+//   useEffect(()=>{
+//     fetchUsers()
+//     fetchCampaigns();
+  
+//   },[])
+
+//   const deleteCampaign = async (id) => {
+//     try {
+//         const response = await fetch(`http://localhost:5000/campaigns/${id}`, {
+//             method: 'DELETE'
+//         });
+//         const result = await response.json();
+
+//         if (result.success) {
+//             toast.success('Campaign deleted successfully!', { duration: 2000 });
+//             fetchCampaigns();
+//         } else {
+//             throw new Error(result.message);
+//         }
+//     } catch (error) {
+//         console.error('Error deleting campaign:', error);
+//         throw error;
+//     }
+// };
+
+//   const formatDate = (dateString) => {
+//     return new Date(dateString).toLocaleDateString('en-US', {
+//       year: 'numeric',
+//       month: 'short',
+//       day: 'numeric',
+//       hour: '2-digit',
+//       minute: '2-digit'
+//     });
+//   };
+// console.log(users)
+
+//   useEffect(()=>{
+//     if(!isAuthenticated){
+//       navigate('/login')
+//     }
+//   })
+
+//   // const handleEditUser = (userData) => {
+//   //   setUsers(users.map(user =>
+//   //     user.id === editingUser.id ? { ...user, ...userData } : user
+//   //   ));
+//   //   setShowUserModal(false);
+//   //   setEditingUser(null);
+//   // };
+// const handleEditUser = async (userData) => {
+//     try {
+//         // Make API call to update user
+//         const response = await fetch(`http://localhost:5000/api/auth/update_user/${editingUser.id}`, {
+//             method: 'PUT',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(userData)
+//         });
+
+//         const result = await response.json();
+
+//         if (!response.ok) {
+//             // Handle error response
+//             console.error('Error updating user:', result.message);
+//             // You might want to show an error message to the user here
+//             alert(result.message || 'Failed to update user');
+//             return;
+//         }
+
+//         // Update local state with the updated user data from the server
+//         setUsers(users.map(user =>
+//             user.id === editingUser.id ? result.user : user
+//         ));
+
+//         setShowUserModal(false);
+//         setEditingUser(null);
+        
+//         // Optional: Show success message
+//         toast.success('User updated successfully!', { duration: 3000 });
+//         console.log('User updated successfully:', result.user);
+        
+//     } catch (error) {
+//         console.error('Network error updating user:', error);
+//         alert('Network error. Please try again.');
+//     }
+// };
+  
+
+//   const toggleUserStatus = (userId) => {
+//     setUsers(users.map(user =>
+//       user.id === userId ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' } : user
+//     ));
+//   };
+
+//   const deleteUser = async (userId) => {
+//   try {
+//     const response = await axios.delete(`http://localhost:5000/api/auth/users/${userId}`, {
+//       withCredentials: true,
+//     });
+//     console.log(response.data.message);
+//     toast.success('User deleted successfully!', { duration: 3000 });
+//     fetchUsers();
+//   } catch (err) {
+//     console.error('Delete error:', err.response.data.message);
+//   }
+// };
+
+//   // User Modal Component
+//   // const UserModal = () => (
+//   //   <div className="fixed inset-0 z-50 overflow-y-auto">
+//   //     <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+//   //       {/* <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+//   //         <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+//   //       </div> */}
+
+//   //       <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+//   //         <form onSubmit={(e) => {
+//   //           e.preventDefault();
+//   //           const formData = new FormData(e.target);
+//   //           const userData = {
+//   //             name: formData.get('name'),
+//   //             email: formData.get('email'),
+//   //             password: formData.get('password')
+//   //           };
+//   //           editingUser ? handleEditUser(userData) : handleCreateUser(userData);
+//   //         }}>
+//   //           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+//   //             <div className="sm:flex sm:items-start">
+//   //               <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+//   //                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+//   //                   {editingUser ? 'Edit User' : 'Create New User'}
+//   //                 </h3>
+
+//   //                 <div className="space-y-4">
+//   //                   <div>
+//   //                     <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+//   //                     <input
+//   //                       type="text"
+//   //                       name="name"
+//   //                       required
+//   //                       defaultValue={editingUser?.name || ''}
+//   //                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//   //                     />
+//   //                   </div>
+
+//   //                   <div>
+//   //                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+//   //                     <input
+//   //                       type="email"
+//   //                       name="email"
+//   //                       required
+//   //                       defaultValue={editingUser?.email || ''}
+//   //                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//   //                     />
+//   //                   </div>
+
+//   //                   <div>
+//   //                     <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+//   //                     <input
+//   //                       type="password"
+//   //                       name="password"
+//   //                       required
+//   //                       defaultValue={editingUser?.password || ''}
+//   //                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//   //                     />
+//   //                   </div>
+
+
+//   //                 </div>
+//   //               </div>
+//   //             </div>
+//   //           </div>
+
+//   //           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+//   //             <button
+//   //               type="submit"
+//   //               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+//   //             >
+//   //               {editingUser ? 'Update User' : 'Create User'}
+//   //             </button>
+//   //             <button
+//   //               type="button"
+//   //               onClick={() => {
+//   //                 setShowUserModal(false);
+//   //                 setEditingUser(null);
+//   //               }}
+//   //               className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+//   //             >
+//   //               Cancel
+//   //             </button>
+//   //           </div>
+//   //         </form>
+//   //       </div>
+//   //     </div>
+//   //   </div>
+//   // );
+//    const UserModal = () => (
+//     <div className="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
+//       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+//         {/* <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+//           <div className="absolute inset-0 bg-gray-700 opacity-50"></div>
+//         </div> */}
+
+//         <div className="inline-block  align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200">
+//           <form onSubmit={(e) => {
+//             e.preventDefault();
+//             const formData = new FormData(e.target);
+//             const userData = {
+//               name: formData.get('name'),
+//               email: formData.get('email'),
+//               password: formData.get('password'),
+//               role: formData.get('role')
+//             };
+//             editingUser ? handleEditUser(userData) : handleCreateUser(userData);
+//           }}>
+//             <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+//               <h3 className="text-xl font-bold text-white">
+//                 {editingUser ? 'Edit User' : 'Create New User'}
+//               </h3>
+//               <p className="text-blue-100 text-sm mt-1">
+//                 {editingUser ? 'Update user information' : 'Add a new team member'}
+//               </p>
+//             </div>
+
+//             <div className="bg-white px-6 py-6">
+//               <div className="space-y-6">
+//                 <div className="group">
+//                   <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+//                   <input
+//                     type="text"
+//                     name="name"
+//                     required
+//                     defaultValue={editingUser?.name || ''}
+//                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+//                     placeholder="Enter full name"
+//                   />
+//                 </div>
+
+//                 <div className="group">
+//                   <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+//                   <input
+//                     type="email"
+//                     name="email"
+//                     required
+//                     defaultValue={editingUser?.email || ''}
+//                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+//                     placeholder="Enter email address"
+//                   />
+//                 </div>
+
+//                 <div className="group">
+//                   <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+//                   <input
+//                     type="password"
+//                     name="password"
+//                     required={!editingUser}
+//                     defaultValue=""
+//                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+//                     placeholder={editingUser ? "Leave blank to keep current" : "Enter password"}
+//                   />
+//                 </div>
+
+//                 <div className="group">
+//                   <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+//                   <select
+//                     name="role"
+//                     defaultValue={editingUser?.role || 'User'}
+//                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+//                   >
+//                     <option value="User">User</option>
+//                     <option value="Manager">Manager</option>
+//                     <option value="Admin">Admin</option>
+//                   </select>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div className="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+//               <button
+//                 type="submit"
+//                 className="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+//               >
+//                 {editingUser ? 'Update User' : 'Create User'}
+//               </button>
+//               <button
+//                 type="button"
+//                 onClick={() => {
+//                   setShowUserModal(false);
+//                   setEditingUser(null);
+//                 }}
+//                 className="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+//               >
+//                 Cancel
+//               </button>
+//             </div>
+//           </form>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+//   // Sidebar Component
+//   const Sidebar = () => (
+//     <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+//       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+//         <div className="flex items-center">
+//           <Mail className="h-8 w-8 text-blue-600" />
+//           <span className="ml-2 text-xl font-bold text-gray-900">EmailPro</span>
+//         </div>
+//         <button
+//           onClick={() => setIsSidebarOpen(false)}
+//           className="lg:hidden"
+//         >
+//           <X className="h-6 w-6" />
+//         </button>
+//       </div>
+
+//       <nav className="mt-6">
+//         <div className="px-3">
+//           {[
+//             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+//             { id: 'campaigns', label: 'Campaigns', icon: Mail },
+//             // { id: 'subscribers', label: 'Subscribers', icon: Users },
+//             { id: 'users', label: 'Users', icon: User },
+//             { id: 'compose', label: 'Compose Email', icon: Send },
+//             { id: 'analytics', label: 'Campaign Scheduler', icon: TrendingUp },
+//             { id: 'settings', label: 'Settings', icon: Settings },
+//           ].map((item) => {
+//             const Icon = item.icon;
+//             return (
+//               <button
+//                 key={item.id}
+//                 onClick={() => setActiveTab(item.id)}
+//                 className={`w-full flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md ${activeTab === item.id
+//                     ? 'bg-blue-100 text-blue-700'
+//                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+//                   }`}
+//               >
+//                 <Icon className="mr-3 h-5 w-5" />
+//                 {item.label}
+//               </button>
+//             );
+//           })}
+//         </div>
+//       </nav>
+//     </div>
+//   );
+
+//   // Header Component
+//   const Header = () => (
+//     <header className="bg-white shadow-sm border-b border-gray-200">
+//       <div className="flex items-center justify-between h-16 px-6">
+//         <div className="flex items-center">
+//           <button
+//             onClick={() => setIsSidebarOpen(true)}
+//             className="lg:hidden mr-3"
+//           >
+//             <Menu className="h-6 w-6" />
+//           </button>
+//           <h1 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h1>
+//         </div>
+
+//         <div className="flex items-center space-x-4">
+//           <button className="p-2 text-gray-400 hover:text-gray-500">
+//             <Bell className="h-6 w-6" />
+//           </button>
+//           <div className="flex items-center space-x-2">
+//             <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+//               <User className="h-5 w-5 text-blue-600" />
+//             </div>
+//             <span className="text-sm font-medium text-gray-700">Admin</span>
+//             <button
+//               onClick={handleLogout}
+//               className="p-2 text-gray-400 hover:text-gray-500"
+//             >
+//               <LogOut className="h-5 w-5" />
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     </header>
+//   );
+
+//   // Dashboard Content
+//   const DashboardContent = () => (
+//     <div className="p-6">
+//       {/* Stats Cards */}
+//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-blue-100 rounded-lg">
+//               <Users className="h-6 w-6 text-blue-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Total Subscribers</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.totalSubscribers.toLocaleString()}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-green-100 rounded-lg">
+//               <Mail className="h-6 w-6 text-green-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-yellow-100 rounded-lg">
+//               <Eye className="h-6 w-6 text-yellow-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Open Rate</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.openRate}%</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-purple-100 rounded-lg">
+//               <TrendingUp className="h-6 w-6 text-purple-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Click Rate</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.clickRate}%</p>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Recent Campaigns */}
+//       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+//         <div className="p-6 border-b border-gray-200">
+//           <div className="flex items-center justify-between">
+//             <h3 className="text-lg font-medium text-gray-900">Recent Campaigns</h3>
+//             <button
+//               onClick={() => setActiveTab('compose')}
+//               className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+//             >
+//               <Plus className="h-4 w-4 mr-2" />
+//               New Campaign
+//             </button>
+//           </div>
+//         </div>
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full divide-y divide-gray-200">
+//             <thead className="bg-gray-50">
+//               <tr>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opened</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clicked</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody className="bg-white divide-y divide-gray-200">
+//               {campaigns.map((campaign) => (
+//                 <tr key={campaign.id}>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{campaign.campaign_name
+// }</td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${campaign.status === 'Active' ? 'bg-green-100 text-green-800' :
+//                         campaign.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
+//                           'bg-gray-100 text-gray-800'
+//                       }`}>
+//                       {campaign.status}
+//                     </span>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">25</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">21</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">478</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(campaign.created_at)}</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+//                     <div className="flex space-x-2">
+//                       <button className="text-blue-600 hover:text-blue-900">
+//                         <Eye className="h-4 w-4" />
+//                       </button>
+                     
+//                       <button onClick={()=>deleteCampaign(campaign.id)} className="text-red-600 hover:text-red-900">
+//                         <Trash2 className="h-4 w-4" />
+//                       </button>
+//                     </div>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+//   // Users Tab Content
+//   const UsersContent = () => (
+//     <div className="p-6">
+//       <div className="flex items-center justify-between mb-6">
+//         <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+//         <button
+//           onClick={() => setShowUserModal(true)}
+//           className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+//         >
+//           <Plus className="h-4 w-4 mr-2" />
+//           Add User
+//         </button>
+//       </div>
+
+//       {/* User Stats */}
+//       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-blue-100 rounded-lg">
+//               <Users className="h-6 w-6 text-blue-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Total Users</p>
+//               <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-green-100 rounded-lg">
+//               <User className="h-6 w-6 text-green-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Active Users</p>
+//               <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.status === 'Active').length}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-purple-100 rounded-lg">
+//               <Settings className="h-6 w-6 text-purple-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Admins</p>
+//               <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'Admin').length}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-yellow-100 rounded-lg">
+//               <User className="h-6 w-6 text-yellow-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Managers</p>
+//               <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'Manager').length}</p>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Users Table */}
+//       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+//         <div className="p-4 border-b border-gray-200">
+//           <div className="flex items-center space-x-4">
+//             <div className="flex-1 relative">
+//               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Search users..."
+//                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//               />
+//             </div>
+//             <button className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+//               <Filter className="h-4 w-4 mr-2" />
+//               Filter
+//             </button>
+//           </div>
+//         </div>
+
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full divide-y divide-gray-200">
+//             <thead className="bg-gray-50">
+//               <tr>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+//                 {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
+//                 {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th> */}
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody className="bg-white divide-y divide-gray-200">
+//               {users.map((user) => (
+//                 <tr key={user.id}>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <div className="flex items-center">
+//                       <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+//                         <User className="h-5 w-5 text-blue-600" />
+//                       </div>
+//                       <div className="ml-4">
+//                         <div className="text-sm font-medium text-gray-900">{user.name}</div>
+//                         <div className="text-sm text-gray-500">{user.email}</div>
+//                       </div>
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'Admin' ? 'bg-red-100 text-red-800' :
+//                         user.role === 'Manager' ? 'bg-blue-100 text-blue-800' :
+//                           'bg-gray-100 text-gray-800'
+//                       }`}>
+//                       User
+//                     </span>
+//                   </td>
+//                   {/* <td className="px-6 py-4 whitespace-nowrap">
+//                     <button
+//                       onClick={() => toggleUserStatus(user.id)}
+//                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full cursor-pointer ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+//                         }`}
+//                     >
+//                       {user.status}
+//                     </button>
+//                   </td> */}
+//                   {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.lastLogin}</td> */}
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(user.created_at)}</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+//                     <div className="flex space-x-2">
+//                       <button
+//                         onClick={() => {
+//                           setEditingUser(user);
+//                           setShowUserModal(true);
+//                         }}
+//                         className="text-blue-600 hover:text-blue-900"
+//                       >
+//                         <Edit className="h-4 w-4" />
+//                       </button>
+//                       <button
+//                         onClick={() => deleteUser(user.id)}
+//                         className="text-red-600 hover:text-red-900"
+//                       >
+//                         <Trash2 className="h-4 w-4" />
+//                       </button>
+//                     </div>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+
+
+
+
+
+
+  
+
+//   // Settings Tab
+//   const SettingsContent = () => (
+//     <div className="p-6">
+//       <h2 className="text-2xl font-bold text-gray-900 mb-6">Settings</h2>
+
+//       <div className="space-y-6">
+//         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+//           <h3 className="text-lg font-medium text-gray-900 mb-4">Account Settings</h3>
+//           <div className="space-y-4">
+//             <div>
+//               <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+//               <input
+//                 type="text"
+//                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                 defaultValue="EmailPro"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium text-gray-700 mb-2">Default From Email</label>
+//               <input
+//                 type="email"
+//                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                 defaultValue="noreply@emailpro.com"
+//               />
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+//           <h3 className="text-lg font-medium text-gray-900 mb-4">Email Settings</h3>
+//           <div className="space-y-4">
+//             <div className="flex items-center">
+//               <input
+//                 type="checkbox"
+//                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+//                 defaultChecked
+//               />
+//               <label className="ml-2 text-sm text-gray-700">Enable email tracking</label>
+//             </div>
+//             <div className="flex items-center">
+//               <input
+//                 type="checkbox"
+//                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+//                 defaultChecked
+//               />
+//               <label className="ml-2 text-sm text-gray-700">Enable click tracking</label>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+//   // Render content based on active tab
+//   const renderContent = () => {
+//     switch (activeTab) {
+//       case 'dashboard':
+//         return <DashboardContent />;
+//       case 'campaigns':
+//         return <CampaignAnalytics campaigns={campaigns} deleteCampaign={deleteCampaign} />;
+
+//       case 'users':
+//         return <UsersContent />;
+//       case 'compose':
+//         return <EmailMarketingTool />;
+//       case 'analytics':
+//         return <CampaignScheduler />;
+//       case 'settings':
+//         return <SettingsContent />;
+//       default:
+//         return <DashboardContent />;
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 flex">
+//       {/* Sidebar */}
+//       <Sidebar />
+
+//       {/* Main Content */}
+//       <div className="flex-1 flex flex-col lg:ml-0">
+//         <Header />
+//         <main className="flex-1 overflow-auto">
+//           {renderContent()}
+//         </main>
+//       </div>
+
+//       {/* User Modal */}
+//       {showUserModal && <UserModal />}
+
+//       {/* Mobile sidebar overlay */}
+//       {isSidebarOpen && (
+//         <div
+//           className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+//           onClick={() => setIsSidebarOpen(false)}
+//         ></div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Dashboard;
+
+
 import EmailMarketingTool from './EmailMarketingTool';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
-import { Mail, Users, BarChart3, Settings, Send, Plus, Eye, Edit, Trash2, Search, Filter, Calendar, TrendingUp, User, LogOut, Bell, Menu, X } from 'lucide-react';
+import { Mail, Users, BarChart3, Settings, Send, Plus, Eye, Edit, Trash2, Search, Filter, Calendar, TrendingUp,Activity,Target, User, LogOut, Bell, Menu, X } from 'lucide-react';
 import CampaignAnalytics from './CampaignAnalytics';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, setAuthentication } from '../redux/userSlice';
+import CampaignScheduler from './CampaignScheduler';
 
 const Dashboard = () => {
     const { isAuthenticated } = useSelector((state) => state.user);
@@ -16,17 +904,14 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [campaigns, setCampaigns] = useState([])
+  const [error, setError] = useState(null);
 
   const [users, setUsers] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Sample data
-  const campaigns = [
-    { id: 1, name: 'Welcome Series', status: 'Active', sent: 1250, opened: 890, clicked: 156, date: '2024-05-20' },
-    { id: 2, name: 'Product Launch', status: 'Draft', sent: 0, opened: 0, clicked: 0, date: '2024-05-22' },
-    { id: 3, name: 'Newsletter May', status: 'Sent', sent: 2340, opened: 1567, clicked: 234, date: '2024-05-15' },
-  ];
+
 
   const stats = {
     totalSubscribers: 12450,
@@ -85,6 +970,23 @@ const Dashboard = () => {
     setShowUserModal(false);
   };
 
+  console.log(campaigns)
+
+  const fetchCampaigns = async () => {
+    try {
+     
+      const response = await axios.get('http://localhost:5000/get_campaigns');
+      
+      if (response.data.success) {
+        setCampaigns(response.data.data);
+      } else {
+        setError('Failed to fetch campaigns');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error fetching campaigns');
+    } 
+  };
+
   const fetchUsers = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/auth/users', {
@@ -101,8 +1003,38 @@ const Dashboard = () => {
 
   useEffect(()=>{
     fetchUsers()
+    fetchCampaigns();
   
   },[])
+
+  const deleteCampaign = async (id) => {
+    try {
+        const response = await fetch(`http://localhost:5000/campaigns/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            toast.success('Campaign deleted successfully!', { duration: 2000 });
+            fetchCampaigns();
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('Error deleting campaign:', error);
+        throw error;
+    }
+};
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 console.log(users)
 
   useEffect(()=>{
@@ -111,14 +1043,51 @@ console.log(users)
     }
   })
 
-  const handleEditUser = (userData) => {
-    setUsers(users.map(user =>
-      user.id === editingUser.id ? { ...user, ...userData } : user
-    ));
-    setShowUserModal(false);
-    setEditingUser(null);
-  };
+  // const handleEditUser = (userData) => {
+  //   setUsers(users.map(user =>
+  //     user.id === editingUser.id ? { ...user, ...userData } : user
+  //   ));
+  //   setShowUserModal(false);
+  //   setEditingUser(null);
+  // };
+const handleEditUser = async (userData) => {
+    try {
+        // Make API call to update user
+        const response = await fetch(`http://localhost:5000/api/auth/update_user/${editingUser.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
 
+        const result = await response.json();
+
+        if (!response.ok) {
+            // Handle error response
+            console.error('Error updating user:', result.message);
+            // You might want to show an error message to the user here
+            alert(result.message || 'Failed to update user');
+            return;
+        }
+
+        // Update local state with the updated user data from the server
+        setUsers(users.map(user =>
+            user.id === editingUser.id ? result.user : user
+        ));
+
+        setShowUserModal(false);
+        setEditingUser(null);
+        
+        // Optional: Show success message
+        toast.success('User updated successfully!', { duration: 3000 });
+        console.log('User updated successfully:', result.user);
+        
+    } catch (error) {
+        console.error('Network error updating user:', error);
+        alert('Network error. Please try again.');
+    }
+};
   
 
   const toggleUserStatus = (userId) => {
@@ -141,75 +1110,179 @@ console.log(users)
 };
 
   // User Modal Component
-  const UserModal = () => (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+  // const UserModal = () => (
+  //   <div className="fixed inset-0 z-50 overflow-y-auto">
+  //     <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+  //       {/* <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+  //         <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+  //       </div> */}
+
+  //       <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+  //         <form onSubmit={(e) => {
+  //           e.preventDefault();
+  //           const formData = new FormData(e.target);
+  //           const userData = {
+  //             name: formData.get('name'),
+  //             email: formData.get('email'),
+  //             password: formData.get('password')
+  //           };
+  //           editingUser ? handleEditUser(userData) : handleCreateUser(userData);
+  //         }}>
+  //           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+  //             <div className="sm:flex sm:items-start">
+  //               <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+  //                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+  //                   {editingUser ? 'Edit User' : 'Create New User'}
+  //                 </h3>
+
+  //                 <div className="space-y-4">
+  //                   <div>
+  //                     <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+  //                     <input
+  //                       type="text"
+  //                       name="name"
+  //                       required
+  //                       defaultValue={editingUser?.name || ''}
+  //                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  //                     />
+  //                   </div>
+
+  //                   <div>
+  //                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+  //                     <input
+  //                       type="email"
+  //                       name="email"
+  //                       required
+  //                       defaultValue={editingUser?.email || ''}
+  //                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  //                     />
+  //                   </div>
+
+  //                   <div>
+  //                     <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+  //                     <input
+  //                       type="password"
+  //                       name="password"
+  //                       required
+  //                       defaultValue={editingUser?.password || ''}
+  //                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  //                     />
+  //                   </div>
+
+
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+
+  //           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+  //             <button
+  //               type="submit"
+  //               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+  //             >
+  //               {editingUser ? 'Update User' : 'Create User'}
+  //             </button>
+  //             <button
+  //               type="button"
+  //               onClick={() => {
+  //                 setShowUserModal(false);
+  //                 setEditingUser(null);
+  //               }}
+  //               className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+  //             >
+  //               Cancel
+  //             </button>
+  //           </div>
+  //         </form>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+   const UserModal = () => (
+    <div className="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+          <div className="absolute inset-0 bg-gray-700 opacity-50"></div>
         </div> */}
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div className="inline-block  align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200">
           <form onSubmit={(e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
             const userData = {
               name: formData.get('name'),
               email: formData.get('email'),
-              password: formData.get('password')
+              password: formData.get('password'),
+              role: formData.get('role')
             };
             editingUser ? handleEditUser(userData) : handleCreateUser(userData);
           }}>
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    {editingUser ? 'Edit User' : 'Create New User'}
-                  </h3>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+              <h3 className="text-xl font-bold text-white">
+                {editingUser ? 'Edit User' : 'Create New User'}
+              </h3>
+              <p className="text-blue-100 text-sm mt-1">
+                {editingUser ? 'Update user information' : 'Add a new team member'}
+              </p>
+            </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                      <input
-                        type="text"
-                        name="name"
-                        required
-                        defaultValue={editingUser?.name || ''}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+            <div className="bg-white px-6 py-6">
+              <div className="space-y-6">
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    defaultValue={editingUser?.name || ''}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    placeholder="Enter full name"
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        defaultValue={editingUser?.email || ''}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    defaultValue={editingUser?.email || ''}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    placeholder="Enter email address"
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="password"
-                        name="password"
-                        required
-                        defaultValue={editingUser?.email || ''}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    required={!editingUser}
+                    defaultValue=""
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    placeholder={editingUser ? "Leave blank to keep current" : "Enter password"}
+                  />
+                </div>
 
-
-                  </div>
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                  <select
+                    name="role"
+                    defaultValue={editingUser?.role || 'User'}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  >
+                    <option value="User">User</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Admin">Admin</option>
+                  </select>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div className="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
               <button
                 type="submit"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                className="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
               >
                 {editingUser ? 'Update User' : 'Create User'}
               </button>
@@ -219,7 +1292,7 @@ console.log(users)
                   setShowUserModal(false);
                   setEditingUser(null);
                 }}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                className="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
               >
                 Cancel
               </button>
@@ -231,78 +1304,191 @@ console.log(users)
   );
 
   // Sidebar Component
-  const Sidebar = () => (
-    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-      <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+  // const Sidebar = () => (
+  //   <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+  //     <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+  //       <div className="flex items-center">
+  //         <Mail className="h-8 w-8 text-blue-600" />
+  //         <span className="ml-2 text-xl font-bold text-gray-900">EmailPro</span>
+  //       </div>
+  //       <button
+  //         onClick={() => setIsSidebarOpen(false)}
+  //         className="lg:hidden"
+  //       >
+  //         <X className="h-6 w-6" />
+  //       </button>
+  //     </div>
+
+  //     <nav className="mt-6">
+  //       <div className="px-3">
+  //         {[
+  //           { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+  //           { id: 'campaigns', label: 'Campaigns', icon: Mail },
+  //           // { id: 'subscribers', label: 'Subscribers', icon: Users },
+  //           { id: 'users', label: 'Users', icon: User },
+  //           { id: 'compose', label: 'Compose Email', icon: Send },
+  //           { id: 'analytics', label: 'Campaign Scheduler', icon: TrendingUp },
+  //           { id: 'settings', label: 'Settings', icon: Settings },
+  //         ].map((item) => {
+  //           const Icon = item.icon;
+  //           return (
+  //             <button
+  //               key={item.id}
+  //               onClick={() => setActiveTab(item.id)}
+  //               className={`w-full flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md ${activeTab === item.id
+  //                   ? 'bg-blue-100 text-blue-700'
+  //                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+  //                 }`}
+  //             >
+  //               <Icon className="mr-3 h-5 w-5" />
+  //               {item.label}
+  //             </button>
+  //           );
+  //         })}
+  //       </div>
+  //     </nav>
+  //   </div>
+  // );
+
+   const Sidebar = () => (
+    <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className="flex items-center justify-between h-20 px-6 border-b border-slate-700/50">
         <div className="flex items-center">
-          <Mail className="h-8 w-8 text-blue-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">EmailPro</span>
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+            <Mail className="h-8 w-8 text-white" />
+          </div>
+          <div className="ml-3">
+            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">EmailPro</span>
+            <p className="text-xs text-slate-400 font-medium">Marketing Suite</p>
+          </div>
         </div>
         <button
           onClick={() => setIsSidebarOpen(false)}
-          className="lg:hidden"
+          className="lg:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors"
         >
-          <X className="h-6 w-6" />
+          <X className="h-6 w-6 text-slate-400" />
         </button>
       </div>
 
-      <nav className="mt-6">
-        <div className="px-3">
+      <nav className="mt-8 px-4">
+        <div className="space-y-2">
           {[
-            { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-            { id: 'campaigns', label: 'Campaigns', icon: Mail },
-            // { id: 'subscribers', label: 'Subscribers', icon: Users },
-            { id: 'users', label: 'Users', icon: User },
-            { id: 'compose', label: 'Compose Email', icon: Send },
-            { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-            { id: 'settings', label: 'Settings', icon: Settings },
+            { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'from-blue-500 to-cyan-500' },
+            { id: 'campaigns', label: 'Campaigns', icon: Mail, color: 'from-green-500 to-emerald-500' },
+            { id: 'users', label: 'Team', icon: Users, color: 'from-purple-500 to-pink-500' },
+            { id: 'compose', label: 'Compose', icon: Send, color: 'from-orange-500 to-red-500' },
+            { id: 'analytics', label: 'Scheduler', icon: Calendar, color: 'from-indigo-500 to-purple-500' },
+            { id: 'settings', label: 'Settings', icon: Settings, color: 'from-gray-500 to-slate-500' },
           ].map((item) => {
             const Icon = item.icon;
+            const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md ${activeTab === item.id
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${
+                  isActive
+                    ? 'bg-gradient-to-r ' + item.color + ' text-white shadow-lg transform scale-105'
+                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:scale-105'
+                }`}
               >
-                <Icon className="mr-3 h-5 w-5" />
+                <Icon className={`mr-4 h-5 w-5 ${isActive ? 'animate-pulse' : 'group-hover:scale-110'} transition-transform`} />
                 {item.label}
+                {isActive && (
+                  <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                )}
               </button>
             );
           })}
         </div>
       </nav>
+
+      <div className="absolute bottom-6 left-4 right-4">
+        <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-4">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">Admin User</p>
+              <p className="text-xs text-slate-300 truncate">admin@emailpro.com</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
   // Header Component
-  const Header = () => (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="flex items-center justify-between h-16 px-6">
-        <div className="flex items-center">
+  // const Header = () => (
+  //   <header className="bg-white shadow-sm border-b border-gray-200">
+  //     <div className="flex items-center justify-between h-16 px-6">
+  //       <div className="flex items-center">
+  //         <button
+  //           onClick={() => setIsSidebarOpen(true)}
+  //           className="lg:hidden mr-3"
+  //         >
+  //           <Menu className="h-6 w-6" />
+  //         </button>
+  //         <h1 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h1>
+  //       </div>
+
+  //       <div className="flex items-center space-x-4">
+  //         <button className="p-2 text-gray-400 hover:text-gray-500">
+  //           <Bell className="h-6 w-6" />
+  //         </button>
+  //         <div className="flex items-center space-x-2">
+  //           <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+  //             <User className="h-5 w-5 text-blue-600" />
+  //           </div>
+  //           <span className="text-sm font-medium text-gray-700">Admin</span>
+  //           <button
+  //             onClick={handleLogout}
+  //             className="p-2 text-gray-400 hover:text-gray-500"
+  //           >
+  //             <LogOut className="h-5 w-5" />
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </header>
+  // );
+
+   const Header = () => (
+    <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+      <div className="flex items-center justify-between h-18 px-6">
+        <div className="flex items-center space-x-4">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden mr-3"
+            className="lg:hidden p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-6 w-6 text-gray-600" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h1>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent capitalize">{activeTab}</h1>
+            <p className="text-sm text-gray-500 font-medium">Manage your email marketing campaigns</p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="p-2 text-gray-400 hover:text-gray-500">
-            <Bell className="h-6 w-6" />
-          </button>
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <User className="h-5 w-5 text-blue-600" />
+          <div className="relative">
+            <button className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 relative">
+              <Bell className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">3</span>
+            </button>
+          </div>
+          
+          <div className="flex items-center space-x-3 bg-gray-50 rounded-xl px-4 py-2">
+            <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <User className="h-5 w-5 text-white" />
             </div>
-            <span className="text-sm font-medium text-gray-700">Admin</span>
+            <div className="hidden sm:block">
+              <p className="text-sm font-semibold text-gray-900">Admin</p>
+              <p className="text-xs text-gray-500">Super Admin</p>
+            </div>
             <button
               onClick={handleLogout}
-              className="p-2 text-gray-400 hover:text-gray-500"
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
             >
               <LogOut className="h-5 w-5" />
             </button>
@@ -313,10 +1499,127 @@ console.log(users)
   );
 
   // Dashboard Content
-  const DashboardContent = () => (
-    <div className="p-6">
+//   const DashboardContent = () => (
+//     <div className="p-6">
+//       {/* Stats Cards */}
+//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-blue-100 rounded-lg">
+//               <Users className="h-6 w-6 text-blue-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Total Subscribers</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.totalSubscribers.toLocaleString()}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-green-100 rounded-lg">
+//               <Mail className="h-6 w-6 text-green-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-yellow-100 rounded-lg">
+//               <Eye className="h-6 w-6 text-yellow-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Open Rate</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.openRate}%</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+//           <div className="flex items-center">
+//             <div className="p-2 bg-purple-100 rounded-lg">
+//               <TrendingUp className="h-6 w-6 text-purple-600" />
+//             </div>
+//             <div className="ml-4">
+//               <p className="text-sm font-medium text-gray-600">Click Rate</p>
+//               <p className="text-2xl font-bold text-gray-900">{stats.clickRate}%</p>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Recent Campaigns */}
+//       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+//         <div className="p-6 border-b border-gray-200">
+//           <div className="flex items-center justify-between">
+//             <h3 className="text-lg font-medium text-gray-900">Recent Campaigns</h3>
+//             <button
+//               onClick={() => setActiveTab('compose')}
+//               className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+//             >
+//               <Plus className="h-4 w-4 mr-2" />
+//               New Campaign
+//             </button>
+//           </div>
+//         </div>
+//         <div className="overflow-x-auto">
+//           <table className="min-w-full divide-y divide-gray-200">
+//             <thead className="bg-gray-50">
+//               <tr>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opened</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clicked</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody className="bg-white divide-y divide-gray-200">
+//               {campaigns.map((campaign) => (
+//                 <tr key={campaign.id}>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{campaign.campaign_name
+// }</td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${campaign.status === 'Active' ? 'bg-green-100 text-green-800' :
+//                         campaign.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
+//                           'bg-gray-100 text-gray-800'
+//                       }`}>
+//                       {campaign.status}
+//                     </span>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">25</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">21</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">478</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(campaign.created_at)}</td>
+//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+//                     <div className="flex space-x-2">
+//                       <button className="text-blue-600 hover:text-blue-900">
+//                         <Eye className="h-4 w-4" />
+//                       </button>
+                     
+//                       <button onClick={()=>deleteCampaign(campaign.id)} className="text-red-600 hover:text-red-900">
+//                         <Trash2 className="h-4 w-4" />
+//                       </button>
+//                     </div>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+ const DashboardContent = () => (
+    <div className="p-6 space-y-8">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -364,16 +1667,77 @@ console.log(users)
             </div>
           </div>
         </div>
+      </div> */}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { 
+            title: 'Total Subscribers', 
+            value: stats.totalSubscribers.toLocaleString(), 
+            icon: Users, 
+            color: 'from-blue-500 to-cyan-500',
+            bgColor: 'from-blue-50 to-cyan-50',
+            change: '+12.5%',
+            changeColor: 'text-green-600'
+          },
+          { 
+            title: 'Active Campaigns', 
+            value: stats.totalCampaigns, 
+            icon: Mail, 
+            color: 'from-emerald-500 to-green-500',
+            bgColor: 'from-emerald-50 to-green-50',
+            change: '+3.2%',
+            changeColor: 'text-green-600'
+          },
+          { 
+            title: 'Open Rate', 
+            value: `${stats.openRate}%`, 
+            icon: Eye, 
+            color: 'from-amber-500 to-orange-500',
+            bgColor: 'from-amber-50 to-orange-50',
+            change: '+2.1%',
+            changeColor: 'text-green-600'
+          },
+          { 
+            title: 'Click Rate', 
+            value: `${stats.clickRate}%`, 
+            icon: TrendingUp, 
+            color: 'from-purple-500 to-pink-500',
+            bgColor: 'from-purple-50 to-pink-50',
+            change: '-0.5%',
+            changeColor: 'text-red-600'
+          }
+        ].map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={index} className={`bg-gradient-to-br ${stat.bgColor} p-6 rounded-2xl shadow-lg border border-white/50 hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 group`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className="h-6 w-6 text-white" />
+                </div>
+                <div className={`text-sm font-semibold ${stat.changeColor} bg-white/80 px-2 py-1 rounded-full`}>
+                  {stat.change}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+
       {/* Recent Campaigns */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+        <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200/50">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">Recent Campaigns</h3>
+             <h3 className="text-xl font-bold text-gray-900">Recent Campaigns</h3>
+              <p className="text-sm text-gray-500 mt-1">Monitor your email campaign performance</p>
             <button
               onClick={() => setActiveTab('compose')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-purple-700 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               <Plus className="h-4 w-4 mr-2" />
               New Campaign
@@ -381,43 +1745,51 @@ console.log(users)
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full">
+            <thead className="bg-gray-50/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opened</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clicked</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                {['Campaign', 'Status', 'Sent', 'Opened', 'Clicked', 'Date', 'Actions'].map((header) => (
+                  <th key={header} className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {campaigns.map((campaign) => (
-                <tr key={campaign.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{campaign.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${campaign.status === 'Active' ? 'bg-green-100 text-green-800' :
-                        campaign.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                      }`}>
+                <tr key={campaign.id} className="hover:bg-gray-50/50 transition-colors duration-200 group">
+                <td className="px-6 py-5">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+                        <Mail className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">{campaign.campaign_name}</div>
+                        
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      campaign.status === 'Active' ? 'bg-green-100 text-green-800 border border-green-200' :
+                      campaign.status === 'Draft' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                      'bg-gray-100 text-gray-800 border border-gray-200'
+                    }`}>
                       {campaign.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.sent.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.opened.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.clicked.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{campaign.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-5 text-sm font-medium text-gray-900">25</td>
+                  <td className="px-6 py-5 text-sm font-medium text-gray-900">478</td>
+                  <td className="px-6 py-5 text-sm font-medium text-gray-900">478</td>
+
+                  <td className="px-6 py-5 text-sm text-gray-500">{formatDate(campaign.created_at)}</td>
+                  <td className="px-6 py-5 text-sm font-medium text-gray-900">
                     <div className="flex space-x-2">
                       <button className="text-blue-600 hover:text-blue-900">
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
+                     
+                      <button onClick={()=>deleteCampaign(campaign.id)} className="text-red-600 hover:text-red-900">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -434,109 +1806,91 @@ console.log(users)
   // Users Tab Content
   const UsersContent = () => (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+     <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Team Management</h2>
+          <p className="text-gray-500 mt-1">Manage your team members and their permissions</p>
+        </div>
         <button
           onClick={() => setShowUserModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-purple-700 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          Add Team Member
         </button>
       </div>
 
       {/* User Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+          { title: 'Total Users', value: users.length, icon: Users, color: 'from-blue-500 to-cyan-500', bgColor: 'from-blue-50 to-cyan-50' },
+          { title: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: Activity, color: 'from-green-500 to-emerald-500', bgColor: 'from-green-50 to-emerald-50' },
+          { title: 'Admins', value: users.filter(u => u.role === 'Admin').length, icon: Settings, color: 'from-red-500 to-pink-500', bgColor: 'from-red-50 to-pink-50' },
+          { title: 'Managers', value: users.filter(u => u.role === 'Manager').length, icon: Target, color: 'from-purple-500 to-indigo-500', bgColor: 'from-purple-50 to-indigo-50' }
+        ].map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={index} className={`bg-gradient-to-br ${stat.bgColor} p-6 rounded-2xl shadow-lg border border-white/50 hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 group`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                </div>
+                <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className="h-6 w-6 text-white" />
+                </div>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <User className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.status === 'Active').length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Settings className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Admins</p>
-              <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'Admin').length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <User className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Managers</p>
-              <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'Manager').length}</p>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search users..."
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-4">
+        <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Team Members</h3>
+              <p className="text-sm text-gray-500 mt-1">Manage your team and their access levels</p>
             </div>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </button>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search team members..."
+                  className="pl-10 pr-4 py-2 w-64 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                />
+              </div>
+              <button className="flex items-center px-4 py-2 border-2 border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full ">
+          <thead className="bg-gray-50/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th> */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                {['User', 'Role',  'Created', 'Actions'].map((header) => (
+                  <th key={header} className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+               <tr key={user.id} className="hover:bg-gray-50/50 transition-colors duration-200 group">
+                  <td className="px-6 py-5">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-blue-600" />
+                      <div className="h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+                        <User className="h-6 w-6 text-white" />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">{user.name}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
                       </div>
                     </div>
@@ -559,7 +1913,7 @@ console.log(users)
                     </button>
                   </td> */}
                   {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.lastLogin}</td> */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.created_at}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(user.created_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
@@ -594,101 +1948,7 @@ console.log(users)
 
 
 
-  // Analytics Tab
-  const AnalyticsContent = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Analytics</h2>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Email Performance</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Delivery Rate</span>
-              <span className="text-sm font-semibold text-gray-900">98.5%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: '98.5%' }}></div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Open Rate</span>
-              <span className="text-sm font-semibold text-gray-900">71.2%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full" style={{ width: '71.2%' }}></div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Click Rate</span>
-              <span className="text-sm font-semibold text-gray-900">18.7%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-purple-500 h-2 rounded-full" style={{ width: '18.7%' }}></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Growth Metrics</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">New Subscribers (30d)</span>
-              <span className="text-sm font-semibold text-green-600">+1,245</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Unsubscribes (30d)</span>
-              <span className="text-sm font-semibold text-red-600">-89</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Net Growth</span>
-              <span className="text-sm font-semibold text-green-600">+1,156</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Growth Rate</span>
-              <span className="text-sm font-semibold text-green-600">+10.2%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Campaign Performance</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Open Rate</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Click Rate</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bounce Rate</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {[
-                { name: 'Welcome Series', sent: 1250, openRate: 89.2, clickRate: 23.4, bounceRate: 1.2, revenue: '$2,450' },
-                { name: 'Newsletter May', sent: 2340, openRate: 67.8, clickRate: 15.3, bounceRate: 2.1, revenue: '$1,890' },
-                { name: 'Product Launch', sent: 1890, openRate: 71.4, clickRate: 18.9, bounceRate: 1.8, revenue: '$3,200' },
-              ].map((campaign, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{campaign.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.sent.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.openRate}%</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.clickRate}%</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{campaign.bounceRate}%</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">{campaign.revenue}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+  
 
   // Settings Tab
   const SettingsContent = () => (
@@ -749,14 +2009,14 @@ console.log(users)
       case 'dashboard':
         return <DashboardContent />;
       case 'campaigns':
-        return <CampaignAnalytics />;
+        return <CampaignAnalytics campaigns={campaigns} deleteCampaign={deleteCampaign} />;
 
       case 'users':
         return <UsersContent />;
       case 'compose':
         return <EmailMarketingTool />;
       case 'analytics':
-        return <AnalyticsContent />;
+        return <CampaignScheduler />;
       case 'settings':
         return <SettingsContent />;
       default:
@@ -792,6 +2052,5 @@ console.log(users)
 };
 
 export default Dashboard;
-
 
 

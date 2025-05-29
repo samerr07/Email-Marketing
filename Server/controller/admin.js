@@ -77,7 +77,94 @@ const createUser = async(req, res) => {
 };
 
 
+const updateUser = async (req, res) => {
+    const { id } = req.params; // Get user ID from URL parameters
+    const { email, password, name } = req.body;
+
+    // Validate user ID
+    if (!id) {
+        return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Check if at least one field is provided for update
+    if (!email && !password && !name) {
+        return res.status(400).json({ message: 'At least one field (name, email, or password) is required for update' });
+    }
+
+    try {
+        // Check if user exists
+        const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('id, email')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !existingUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // If email is being updated, check if new email already exists
+        if (email && email !== existingUser.email) {
+            const { data: emailExists } = await supabase
+                .from('users')
+                .select('id')
+                .eq('email', email)
+                .single();
+
+            if (emailExists) {
+                return res.status(400).json({ message: 'Email already exists' });
+            }
+        }
+
+        // Prepare update object
+        const updateData = {};
+        
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        
+        // Hash password if provided
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateData.hashed_password = hashedPassword;
+            updateData.password = password; // Keep plain password if needed
+        }
+
+        // Update the user
+        const { data: updatedUser, error: updateError } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', id)
+            .select();
+
+        if (updateError) {
+            return res.status(500).json({ 
+                message: 'Error updating user', 
+                error: updateError.message 
+            });
+        }
+
+        if (!updatedUser || updatedUser.length === 0) {
+            return res.status(404).json({ message: 'User not found or update failed' });
+        }
+
+        console.log('Updated user:', updatedUser);
+        res.status(200).json({ 
+            message: 'User updated successfully', 
+            user: updatedUser[0] 
+        });
+
+    } catch (err) {
+        console.error('User update error:', err);
+        res.status(500).json({ 
+            message: 'Internal server error', 
+            error: err.message 
+        });
+    }
+};
+
+
 module.exports = {
     adminLogin,
-    createUser
+    createUser,
+    updateUser
 };
