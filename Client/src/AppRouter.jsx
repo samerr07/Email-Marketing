@@ -6,6 +6,7 @@ import Login from './Components/Login'
 import { ToastContainer } from 'react-toastify'
 import EmailMarketingTool from './Components/EmailMarketingTool'
 import Header from './Components/Header'
+import UserDashboard from './Components/UserDashboard'
 
 // Create a separate component for the app content
 function AppRouter() {
@@ -24,12 +25,13 @@ function AppRouter() {
   return (
     <>
       <ToastContainer />
-      {shouldShowNavbar && <Header />}
+      {/* {shouldShowNavbar && <Header />} */}
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/email-tool" element={<EmailMarketingTool />} />
+        <Route path='/user-dashboard' element={<UserDashboard/>}/>
       </Routes>
     </>
   );

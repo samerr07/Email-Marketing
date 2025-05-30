@@ -2,9 +2,9 @@
 const nodemailer = require('nodemailer');
 
 async function testSMTPConnection({ smtpServer, smtpPort, emailUser, emailPass }) {
-    if (!smtpServer || !smtpPort || !emailUser || !emailPass) {
-        throw new Error('Missing required SMTP configuration fields');
-    }
+    // if (!smtpServer || !smtpPort || !emailUser || !emailPass) {
+    //     throw new Error('Missing required SMTP configuration fields');
+    // }
 
     const transporter = nodemailer.createTransport({
         host: smtpServer,

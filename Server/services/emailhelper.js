@@ -27,12 +27,28 @@ function filterValidRecipients(data, emailColumn) {
 }
 
 // Create nodemailer transporter with given SMTP config and delay
+// function createTransporter({ smtpServer, smtpPort, emailUser, emailPass, delayBetweenEmails }) {
+//     return nodemailer.createTransport({
+//         host: smtpServer,
+//         port: parseInt(smtpPort),
+//         secure: smtpPort === '465',
+//         auth: { user: emailUser, pass: emailPass },
+//         pool: true,
+//         maxConnections: 3,
+//         maxMessages: 50,
+//         rateDelta: delayBetweenEmails,
+//         rateLimit: 3,
+//         connectionTimeout: 15000,
+//         socketTimeout: 45000,
+//     });
+// }
+
 function createTransporter({ smtpServer, smtpPort, emailUser, emailPass, delayBetweenEmails }) {
     return nodemailer.createTransport({
-        host: smtpServer,
-        port: parseInt(smtpPort),
-        secure: smtpPort === '465',
-        auth: { user: emailUser, pass: emailPass },
+        host: "email-smtp.ap-south-1.amazonaws.com",
+        port: 587,
+        secure: "587" === '465',
+        auth: { user: "AKIA3DDR2ZJ7DWT6QRFQ", pass: "BKMHFsCRI0o6zJWnRnvv5mGNTvaUJOUg1lTUbyw5t1PN" },
         pool: true,
         maxConnections: 3,
         maxMessages: 50,
@@ -96,6 +112,119 @@ function buildAttachmentsFromCIDs(cids, uploadsPath = './uploads/images/') {
 
 
 // Send emails with retry and personalization
+// async function sendEmailsJob({
+//     jobId,
+//     recipients,
+//     emailColumn,
+//     nameColumn,
+//     subjectLine,
+//     senderName,
+//     templateContent,
+//     variables,
+//     transporter,
+//     delayBetweenEmails,
+//     activeSendingJobs,
+//     uploadsPath = './uploads/images/'
+// }) {
+//     let success = 0;
+//     let failed = 0;
+
+//     // Extract CID references from template once
+//     const cidReferences = extractCIDReferences(templateContent);
+//     const baseAttachments = buildAttachmentsFromCIDs(cidReferences, uploadsPath);
+
+//     for (let i = 0; i < recipients.length; i++) {
+//         const currentJobData = activeSendingJobs.get(jobId);
+//         if (!currentJobData || currentJobData.shouldStop) {
+//             if (currentJobData) {
+//                 currentJobData.sentEmails = success;
+//                 currentJobData.failedEmails = failed;
+//                 currentJobData.stopped = true;
+//             }
+//             break;
+//         }
+
+//         const row = recipients[i];
+//         const email = row[emailColumn];
+//         const name = nameColumn ? row[nameColumn] || '' : '';
+
+//         try {
+//             let personalized = templateContent;
+//             if (Array.isArray(variables)) {
+//                 variables.forEach(variable => {
+//                     if (variable.placeholder && variable.column && row[variable.column]) {
+//                         const value = String(row[variable.column]);
+//                         const regex = new RegExp(`{{${variable.placeholder}}}`, 'g');
+//                         personalized = personalized.replace(regex, value);
+//                     }
+//                 });
+//             }
+//             const personalizedSubject = subjectLine.replace(/{{name}}/gi, name);
+//             personalized = personalized.replace(/{{name}}/gi, name);
+
+//              // Prepare email options
+//             const mailOptions = {
+//                 from: `"${senderName || 'Email Marketing Tool'}" <${transporter.options.auth.user}>`,
+//                 to: email,
+//                 subject: personalizedSubject,
+//                 html: personalized,
+//                 attachments: baseAttachments // Include CID attachments
+//             };
+
+//             let retries = 2;
+//             let sent = false;
+
+
+
+//             // while (retries >= 0 && !sent) {
+//             //     try {
+//             //         await transporter.sendMail({
+//             //             from: `"${senderName || 'Email Marketing Tool'}" <${transporter.options.auth.user}>`,
+//             //             to: email,
+//             //             subject: personalizedSubject,
+//             //             html: personalized,
+//             //         });
+//             //         sent = true;
+//             //         success++;
+//             //         const jobData = activeSendingJobs.get(jobId);
+//             //         if (jobData) jobData.sentEmails = success;
+//             //     } catch (err) {
+//             //         retries--;
+//             //         if (retries < 0) throw err;
+//             //         await new Promise(r => setTimeout(r, 1000));
+//             //     }
+//             // }
+//             while (retries >= 0 && !sent) {
+//                 try {
+//                     await transporter.sendMail(mailOptions);
+//                     sent = true;
+//                     success++;
+//                     const jobData = activeSendingJobs.get(jobId);
+//                     if (jobData) jobData.sentEmails = success;
+//                 } catch (err) {
+//                     retries--;
+//                     if (retries < 0) throw err;
+//                     await new Promise(r => setTimeout(r, 1000));
+//                 }
+//             }
+//         } catch (err) {
+//             failed++;
+//             const jobData = activeSendingJobs.get(jobId);
+//             if (jobData) jobData.failedEmails = failed;
+//         }
+
+//         if (i < recipients.length - 1) {
+//             await new Promise(r => setTimeout(r, delayBetweenEmails));
+//         }
+//     }
+
+//     const finalJobData = activeSendingJobs.get(jobId);
+//     if (finalJobData) {
+//         finalJobData.completed = true;
+//         finalJobData.endTime = new Date();
+//     }
+//     transporter.close();
+// }
 async function sendEmailsJob({
     jobId,
     recipients,
@@ -148,7 +277,7 @@ async function sendEmailsJob({
 
              // Prepare email options
             const mailOptions = {
-                from: `"${senderName || 'Email Marketing Tool'}" <${transporter.options.auth.user}>`,
+                from: "noreply@brainaura.in",
                 to: email,
                 subject: personalizedSubject,
                 html: personalized,

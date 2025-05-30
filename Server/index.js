@@ -397,15 +397,15 @@ app.post('/campaign', upload.fields([
         console.log('Received body:', req.body);
 
         // Validate required fields
-        if (!emailColumn || !subjectLine || !smtpServer || !emailUser || !emailPass) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields: emailColumn, subjectLine, smtpServer, emailUser, emailPass'
-            });
-        }
+        // if (!emailColumn || !subjectLine || !smtpServer || !emailUser || !emailPass) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'Missing required fields: emailColumn, subjectLine, smtpServer, emailUser, emailPass'
+        //     });
+        // }
 
         // Validate SMTP
-        await testSMTPConnection({ smtpServer, smtpPort, emailUser, emailPass });
+        // await testSMTPConnection({ smtpServer, smtpPort, emailUser, emailPass });
 
         // 3. Use template content or uploaded template file
         let finalTemplateContent = '';

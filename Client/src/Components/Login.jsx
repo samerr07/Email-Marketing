@@ -70,7 +70,7 @@ const LoginForm = () => {
         }else{
           dispatch(setAuthentication(true))
           dispatch(getProfile(data.user))
-          navigate('/email-tool')
+          navigate('/user-dashboard')
         }
       
     } catch (err) {
